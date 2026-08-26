@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pdfplumber
 import pypandoc
+from tqdm import tqdm
 
 SUPPORTED_EXTENSIONS = {".docx", ".pdf"}
 
@@ -27,7 +28,9 @@ def convert_docx(src: Path, dest: Path) -> None:
 def convert_pdf(src: Path, dest: Path) -> None:
     with pdfplumber.open(src) as pdf:
         pages = []
-        for i, page in enumerate(pdf.pages, start=1):
+        for i, page in enumerate(
+            tqdm(pdf.pages, desc=src.name, unit="page", leave=False), start=1
+        ):
             text = page.extract_text() or ""
             pages.append(f"## Page {i}\n\n{text.strip()}")
     dest.write_text("\n\n---\n\n".join(pages), encoding="utf-8")
@@ -60,7 +63,9 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
         p for ext in SUPPORTED_EXTENSIONS for p in folder.rglob(f"*{ext}")
     ]
     ok, errors = 0, 0
-    for src in sorted(files):
+    bar = tqdm(sorted(files), desc="fichiers", unit="fichier")
+    for src in bar:
+        bar.set_postfix_str(src.name)
         if output_dir is not None:
             rel = src.relative_to(folder)
             dest = output_dir / rel.with_suffix(".md")
@@ -68,10 +73,10 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
             dest = None
         try:
             result = convert_file(src, dest)
-            print(f"  converted: {result}")
+            bar.write(f"  converted: {result}")
             ok += 1
         except Exception as exc:
-            print(f"  error: {src} — {exc}", file=sys.stderr)
+            bar.write(f"  error: {src} — {exc}", file=sys.stderr)
             errors += 1
     return ok, errors
 
