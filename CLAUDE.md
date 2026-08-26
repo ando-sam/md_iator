@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment
 
-Pyenv virtualenv `md_iator` (set via `.python-version`). Dependencies already installed: `pypandoc`, `pdfplumber`.
+Pyenv virtualenv `md_iator` (set via `.python-version`). Installable via `pip install -e .` (pyproject.toml, deps pinnées : `pypandoc`, `pdfplumber`, `tqdm`) — expose la commande `md-iator`.
 
 Pandoc binary is not required at install time — the app downloads it automatically on first run via `pypandoc.download_pandoc()`.
 
@@ -12,12 +12,15 @@ Pandoc binary is not required at install time — the app downloads it automatic
 
 ```bash
 # Fichier unique
-python md_iator.py rapport.docx
-python md_iator.py rapport.pdf -o ./output/rapport.md
+md-iator rapport.docx
+md-iator rapport.pdf -o ./output/rapport.md
 
 # Dossier entier (batch récursif)
-python md_iator.py ./documents/
-python md_iator.py ./documents/ -o ./markdown/
+md-iator ./documents/
+md-iator ./documents/ -o ./markdown/
+
+# Sans installation (fallback)
+python md_iator.py rapport.docx
 ```
 
 Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
@@ -31,3 +34,5 @@ Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
 - `convert_file(src, output)` — dispatch par extension, calcule le chemin de sortie
 - `batch_convert(folder, output_dir)` — `rglob` récursif sur `.docx` et `.pdf`, continue sur erreur
 - `main()` — argparse avec un positional `input` (fichier ou dossier) et `-o/--output` optionnel
+
+Pas de tests, pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
