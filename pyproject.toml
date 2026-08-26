@@ -1,0 +1,20 @@
+[project]
+name = "md-iator"
+version = "0.1.0"
+description = "Convertit des fichiers DOCX et PDF en Markdown."
+requires-python = ">=3.10"
+dependencies = [
+    "pypandoc>=1.17",
+    "pdfplumber>=0.11.10",
+    "tqdm>=4.70.0",
+]
+
+[project.scripts]
+md-iator = "md_iator:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["md_iator"]
