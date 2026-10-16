@@ -47,4 +47,6 @@ Paquet `md_iator/` :
 
 Tests pytest dans `tests/` : `pip install -e ".[dev]"` puis `python -m pytest`. `tests/conftest.py` remplace pandoc et pdfplumber par des faux moteurs (fixtures `engines`, `make`, `interrupt_at` — simule un Ctrl-C au n-ième `convert_file` —, `pandoc_checks` ; ce dernier patche `md_iator.ensure_pandoc`, que `convert_docx` appelle via le module, et `engines` le requiert — aucun test de conversion ne touche le réseau) — aucun réseau ni vrai document. Ne pas confondre avec `test/`, qui contient des documents d'exemple locaux non versionnés.
 
+CI : `.github/workflows/tests.yml` lance la suite sur ubuntu, macOS et Windows, Python 3.10 à 3.14, avec pandoc installé (le test réel ne s'exécute donc qu'en CI ou si pandoc est présent).
+
 Pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
