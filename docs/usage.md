@@ -3,7 +3,7 @@
 ## Synopsis
 
 ```
-python md_iator.py <input> [-o <output>]
+python main.py <input> [-o <output>]
 ```
 
 | Argument | Description |
@@ -19,13 +19,13 @@ Triggered when `input` is a file.
 
 ```bash
 # Output written next to the source: report.md
-python md_iator.py report.docx
+python main.py report.docx
 
 # Explicit output file
-python md_iator.py report.docx -o converted/report.md
+python main.py report.docx -o converted/report.md
 
 # PDF with custom destination
-python md_iator.py scan.pdf -o notes/scan.md
+python main.py scan.pdf -o notes/scan.md
 ```
 
 The output directory is created automatically if it does not exist.
@@ -44,10 +44,10 @@ discovered **recursively**. Extensions are matched case-insensitively
 
 ```bash
 # Each file gets a sibling .md in the same folder
-python md_iator.py ./documents/
+python main.py ./documents/
 
 # All .md files go to ./out/, mirroring the subfolder structure
-python md_iator.py ./documents/ -o ./out/
+python main.py ./documents/ -o ./out/
 ```
 
 ### Example tree

@@ -3,8 +3,8 @@
 > Convert **DOCX** and **PDF** files to clean **Markdown** — single file or entire folder, one command.
 
 ```bash
-python md_iator.py report.docx
-python md_iator.py ./documents/ -o ./markdown/
+python main.py report.docx
+python main.py ./documents/ -o ./markdown/
 ```
 
 ---
@@ -33,26 +33,26 @@ python md_iator.py ./documents/ -o ./markdown/
 
 ```bash
 # Output next to the source file
-python md_iator.py report.docx          # → report.md
+python main.py report.docx          # → report.md
 
 # Custom output path
-python md_iator.py report.pdf -o out/report.md
+python main.py report.pdf -o out/report.md
 ```
 
 ### Batch (folder)
 
 ```bash
 # Convert all .docx and .pdf in ./docs/ (recursive)
-python md_iator.py ./docs/
+python main.py ./docs/
 
 # Send all results to a separate folder, preserving subfolder structure
-python md_iator.py ./docs/ -o ./markdown/
+python main.py ./docs/ -o ./markdown/
 ```
 
 ### Help
 
 ```bash
-python md_iator.py --help
+python main.py --help
 ```
 
 ---
@@ -90,7 +90,8 @@ Content of the second page...
 
 ```
 md_iator/
-├── md_iator.py      # CLI entry point — the whole app
+├── main.py          # CLI entry point (argparse, exit codes)
+├── md_iator.py      # Conversion logic (DOCX, PDF, batch)
 └── docs/
     └── usage.md     # Full CLI reference and examples
 ```

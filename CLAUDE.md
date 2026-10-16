@@ -20,21 +20,27 @@ md-iator ./documents/
 md-iator ./documents/ -o ./markdown/
 
 # Sans installation (fallback)
-python md_iator.py rapport.docx
+python main.py rapport.docx
 ```
 
 Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
 
 ## Architecture
 
-`md_iator.py` est un fichier unique :
+Deux modules :
 
+`md_iator.py` — logique de conversion :
+
+- `ensure_pandoc()` — vérifie pandoc, le télécharge s'il est absent
 - `convert_docx(src, dest)` — délègue à `pypandoc.convert_file`
 - `convert_pdf(src, dest)` — extrait le texte page par page avec `pdfplumber`, insère des séparateurs `---` entre les pages
 - `convert_file(src, output)` — dispatch par extension, calcule le chemin de sortie
 - `batch_convert(folder, output_dir)` — `rglob` récursif, extensions insensibles à la casse, ignore les fichiers verrou Word `~$*`, signale en erreur une source dont le `.md` cible a déjà été produit (pas d'écrasement), continue sur erreur
+
+`main.py` — point d'entrée CLI (`md-iator = "main:main"`) :
+
 - `main()` — argparse avec un positional `input` (fichier ou dossier) et `-o/--output` optionnel ; un `-o` terminé par `/` est créé comme dossier ; pandoc n'est vérifié/téléchargé qu'après validation des arguments
 
-Tests pytest dans `tests/` : `pip install -e ".[dev]"` puis `python -m pytest`. `tests/conftest.py` remplace pandoc et pdfplumber par des faux moteurs (fixtures `engines`, `make`, `pandoc_checks`) — aucun réseau ni vrai document. Ne pas confondre avec `test/`, qui contient des documents d'exemple locaux non versionnés.
+Tests pytest dans `tests/` : `pip install -e ".[dev]"` puis `python -m pytest`. `tests/conftest.py` remplace pandoc et pdfplumber par des faux moteurs (fixtures `engines`, `make`, `pandoc_checks` ; ce dernier patche `md_iator.ensure_pandoc`, que `main.py` appelle via le module) — aucun réseau ni vrai document. Ne pas confondre avec `test/`, qui contient des documents d'exemple locaux non versionnés.
 
 Pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
