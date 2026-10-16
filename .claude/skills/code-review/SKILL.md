@@ -27,7 +27,8 @@ actionnable.
   `a.pdf`) qui visent le même `.md`.
 
 ### Invariants md_iator (chacun = Critique s'il est violé)
-- Codes de sortie : `0` seulement si tout a réussi, `1` sinon.
+- Codes de sortie : `0` seulement si tout a réussi, `1` si une conversion a
+  échoué, `2` pour des arguments invalides ou un chemin introuvable (argparse).
 - Batch : une erreur sur un fichier est écrite sur stderr et le batch continue.
 - Format PDF : `## Page N` par page, séparateur `---`.
 - Calcul du chemin de sortie : à côté de la source sans `-o` ; arborescence

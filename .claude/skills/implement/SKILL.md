@@ -41,7 +41,8 @@ vérifier.
 ## Contrats à préserver
 
 - Arguments CLI : positional `input`, `-o/--output`.
-- Codes de sortie : `0` si tout a réussi, `1` sinon.
+- Codes de sortie : `0` si tout a réussi, `1` si une conversion a échoué,
+  `2` pour des arguments invalides ou un chemin introuvable (argparse).
 - Batch : une erreur sur un fichier n'arrête pas le lot.
 - Format PDF : `## Page N` par page, séparateur `---`.
 - Chemin de sortie : à côté de la source sans `-o`, arborescence miroir sous

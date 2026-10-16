@@ -49,7 +49,8 @@ présente est une architecture rejetée.
 - **Contrat CLI** : positional `input` (fichier ou dossier), `-o/--output`
   optionnel. Les commandes documentées dans `README.md` et `docs/usage.md`
   doivent continuer de fonctionner.
-- **Codes de sortie** : `0` si tout a réussi, `1` sinon. Des scripts peuvent
+- **Codes de sortie** : `0` si tout a réussi, `1` si une conversion a échoué,
+  `2` pour des arguments invalides (argparse). Des scripts peuvent
   s'appuyer dessus.
 - **Batch résilient** : un fichier en erreur est signalé sur stderr et le batch
   continue. Une architecture qui fait échouer tout le lot sur un fichier est
