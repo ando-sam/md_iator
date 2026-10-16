@@ -192,13 +192,21 @@ VSCode's preview and GitHub render:
 - Hyperlinks → `[text](url)`
 - Images → extracted next to the `.md`, see below
 
+Dropped on purpose:
+
+- The Word table of contents and its title. Its page numbers mean nothing in
+  Markdown, and its links would not lead to the headings in VSCode or on
+  GitHub; their outline view lists the headings instead. It is recognised as
+  a run of paragraphs holding only links to headings, after a "TOC Heading"
+  title or carrying Word's page numbers. Its title goes with it: the
+  "TOC Heading" title, a bold paragraph right before the entries, or both.
+- Empty headings.
+
 Not carried over from Word:
 
 - Heading numbers added automatically by Word (`A.`, `B.`, `1.1`): the
   heading text is kept, the number is lost. Numbers typed in the heading
   itself are kept.
-- The table of contents is copied as a list of links followed by Word page
-  numbers; in VSCode or on GitHub its links do not lead to the headings.
 - Page headers and footers.
 
 #### Images

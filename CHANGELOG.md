@@ -37,6 +37,9 @@ All notable changes to md_iator. The format follows
 
 ### Changed
 
+- The Word table of contents and its title are dropped from DOCX output, as
+  are empty headings. Its entries carried Word page numbers as nested links,
+  and its links used pandoc's heading ids, which GFM viewers do not generate.
 - Supported platforms are Linux and macOS, tested in CI with Python 3.10 to
   3.14. Windows is not supported: its test runs failed and it is no longer
   tested.

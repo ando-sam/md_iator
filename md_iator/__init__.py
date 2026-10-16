@@ -1,6 +1,7 @@
 """Convert DOCX and PDF files to Markdown using pypandoc and pdfplumber."""
 
 import functools
+import json
 import os
 import re
 import shutil
@@ -76,17 +77,99 @@ def media_dir(dest: Path) -> Path:
     return dest.with_name(f"{slug}_media")
 
 
+_BLANK_INLINES = {"Space", "SoftBreak", "LineBreak"}
+
+
+def _has_content(inlines: list[dict]) -> bool:
+    return any(inline["t"] not in _BLANK_INLINES for inline in inlines)
+
+
+def _content(block: dict) -> list[dict]:
+    if block["t"] not in ("Para", "Plain"):
+        return []
+    return [inline for inline in block["c"] if inline["t"] not in _BLANK_INLINES]
+
+
+def _is_toc_entry(block: dict) -> bool:
+    # A paragraph holding only links to headings of the document.
+    inlines = _content(block)
+    return bool(inlines) and all(
+        inline["t"] == "Link" and inline["c"][2][0].startswith("#")
+        for inline in inlines
+    )
+
+
+def _has_page_link(block: dict) -> bool:
+    # Word nests the page number of an entry in a second link to the heading.
+    return any(
+        nested["t"] == "Link" for link in _content(block) for nested in link["c"][1]
+    )
+
+
+def _is_toc_heading(block: dict) -> bool:
+    return block["t"] == "Header" and "TOC-Heading" in block["c"][1][1]
+
+
+def _is_bold_title(block: dict) -> bool:
+    inlines = _content(block)
+    return len(inlines) == 1 and inlines[0]["t"] == "Strong"
+
+
+def _toc_blocks(blocks: list[dict]) -> set[int]:
+    toc: set[int] = set()
+    start = 0
+    while start < len(blocks):
+        if not _is_toc_entry(blocks[start]):
+            start += 1
+            continue
+        end = start
+        while end < len(blocks) and _is_toc_entry(blocks[end]):
+            end += 1
+        # The title before the entries: a "TOC Heading" heading, a bold
+        # paragraph typed by the author, or both.
+        title = start
+        if title > 0 and _is_bold_title(blocks[title - 1]):
+            title -= 1
+        after_toc_heading = title > 0 and _is_toc_heading(blocks[title - 1])
+        entries = blocks[start:end]
+        if after_toc_heading or any(map(_has_page_link, entries)):
+            toc.update(range(title, end))
+        start = end
+    return toc
+
+
+def clean_docx_blocks(blocks: list[dict]) -> list[dict]:
+    """Drop the Word table of contents and empty headings from a pandoc tree.
+
+    The table of contents is a run of paragraphs holding only links to
+    headings, after a "TOC Heading" title or with Word's page numbers, plus
+    its title: the page numbers mean nothing in Markdown, and the links use
+    pandoc's heading ids, which GFM viewers do not generate.
+    """
+    toc = _toc_blocks(blocks)
+    return [
+        block for i, block in enumerate(blocks)
+        if i not in toc
+        and not _is_toc_heading(block)
+        and not (block["t"] == "Header" and not _has_content(block["c"][2]))
+    ]
+
+
 def convert_docx(src: Path, dest: Path) -> None:
     ensure_pandoc()
     # Run pandoc from dest's folder so image links are relative to the .md.
-    # GFM rather than pandoc's own Markdown: VSCode and GitHub render its
-    # tables, and it has no {width=…} attributes to show as plain text.
-    pypandoc.convert_file(
+    # The DOCX is read into pandoc's JSON tree, cleaned, then written as GFM
+    # rather than pandoc's own Markdown: VSCode and GitHub render its tables,
+    # and it has no {width=…} attributes to show as plain text.
+    tree = json.loads(pypandoc.convert_file(
         str(src.resolve()),
-        "gfm",
-        outputfile=str(dest.resolve()),
+        "json",
         extra_args=[f"--extract-media={media_dir(dest).name}"],
         cworkdir=str(dest.parent.resolve()),
+    ))
+    tree["blocks"] = clean_docx_blocks(tree["blocks"])
+    pypandoc.convert_text(
+        json.dumps(tree), "gfm", format="json", outputfile=str(dest.resolve())
     )
 
 

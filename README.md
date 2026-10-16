@@ -116,8 +116,8 @@ full reference.
   [ocrmypdf](https://ocrmypdf.readthedocs.io/) first, then convert again.
 - **PDF layout**: only the text is extracted — no headings, tables or images.
 - **DOCX heading numbers** added automatically by Word (`A.`, `1.1`) are
-  lost, and the Word table of contents is copied with links that do not lead
-  to the headings in VSCode or on GitHub.
+  lost. The Word table of contents is dropped: its links would not lead to the
+  headings in VSCode or on GitHub, whose outline view lists them instead.
 - **Offline first run**: if pandoc is missing and cannot be downloaded, each
   `.docx` fails with an installation hint; PDFs are still converted. Install
   pandoc yourself in that case: <https://pandoc.org/installing.html>.
