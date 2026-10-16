@@ -37,6 +37,9 @@ All notable changes to md_iator. The format follows
 
 ### Changed
 
+- Supported platforms are Linux and macOS, tested in CI with Python 3.10 to
+  3.14. Windows is not supported: its test runs failed and it is no longer
+  tested.
 - Every `.md` is written to a temporary file and renamed, so a failed or
   interrupted conversion never leaves a truncated file or replaces the
   previous one.

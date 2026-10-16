@@ -22,8 +22,9 @@ The tool talks in French; this documentation is in English.
 
 ## Install
 
-Requires Python 3.10 or later. [pipx](https://pipx.pypa.io/) installs the
-command in its own environment:
+Runs on **Linux and macOS** with Python 3.10 or later. Windows is not
+supported. [pipx](https://pipx.pypa.io/) installs the command in its own
+environment:
 
 ```bash
 pipx install git+https://github.com/ando-sam/md_iator.git
@@ -109,6 +110,8 @@ full reference.
 
 ## Limitations
 
+- **Windows**: not supported and not tested. The tests fail there, and DOCX
+  image links are suspected not to work. Use Linux or macOS.
 - **Scanned PDFs**: there is no OCR. Run them through
   [ocrmypdf](https://ocrmypdf.readthedocs.io/) first, then convert again.
 - **PDF layout**: only the text is extracted — no headings, tables or images.
