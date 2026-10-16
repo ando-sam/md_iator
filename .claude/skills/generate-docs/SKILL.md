@@ -41,8 +41,9 @@ répercute dans les trois.
   principale, `python main.py` en fallback sans installation.
 - Exemples de sortie copiés d'une vraie exécution, pas inventés. Lancer la
   commande avec `-o` vers un dossier temporaire pour les capturer.
-- Messages cités exactement comme le code les affiche (`converted: ...`,
-  `error: ...`, `N/M fichiers convertis.`).
+- Messages cités exactement comme le code les affiche (`converti : ...`,
+  `vide : ...`, `ignoré : ...`, `erreur : ...`, récap
+  `2 convertis · 1 vide · 1 erreur`).
 - Dépendances : vérifier que `pyproject.toml` et `requirements.txt` disent la
   même chose avant de les documenter.
 

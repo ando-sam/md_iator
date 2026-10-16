@@ -43,12 +43,16 @@ Le socle, qui change les réponses de façon très concrète :
 - **Batch résilient** : un fichier en erreur est signalé sur stderr et le lot
   continue ; code de sortie `1` si au moins une erreur.
 - **Sortie** : le `.md` est écrit à côté de la source, ou sous `-o` en
-  reproduisant l'arborescence. Aujourd'hui, un `.md` existant est écrasé sans
-  avertissement.
-- **Moteurs** : pandoc (via pypandoc, téléchargé automatiquement au premier
-  lancement) pour DOCX, pdfplumber (texte seul, pas d'OCR) pour PDF.
-- **Barre de progression** `tqdm` par fichier en batch et par page en PDF.
-- **Messages en français**, préfixes `converted:` / `error:`.
+  reproduisant l'arborescence, via un fichier temporaire renommé (jamais de
+  `.md` tronqué). Un `.md` existant est écrasé par défaut ; `--skip-existing`
+  le garde et sert à reprendre après un Ctrl-C (code `130`).
+- **Moteurs** : pandoc (via pypandoc, téléchargé au premier DOCX converti)
+  pour DOCX, pdfplumber (texte seul, pas d'OCR) pour PDF. Un PDF sans texte
+  n'écrit rien et compte « vide ».
+- **Barre de progression** `tqdm` par fichier et par page, seulement dans un
+  terminal.
+- **Messages en français** : `converti :`, `vide :`, `ignoré :`, `erreur :`,
+  récap `2 convertis · 1 vide · 1 erreur`. Le cadre d'argparse reste anglais.
 
 Donc à la question « et si ça plante au milieu ? », la bonne réponse n'est pas
 « on reprend là où on s'était arrêté » par défaut — c'est « voici ce qui reste
