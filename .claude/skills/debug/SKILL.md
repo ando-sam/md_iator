@@ -5,37 +5,57 @@ description: Diagnostique et corrige un bug par root-cause analysis. Déclencher
 
 # Debug
 
-Diagnostic systématique de la reproduction à la correction vérifiée.
+Diagnostic systématique, de la reproduction à la correction vérifiée.
 
 Demander si non fourni :
-- Symptôme, stack trace, ou comportement erroné
-- Où ça casse : dev (`npm run dev`), build (`npm run build`), ou runtime production
-- Serveur ou navigateur (l'erreur apparaît dans le terminal ou dans la console DevTools ?)
+- Symptôme, stack trace, ou sortie Markdown erronée
+- Commande exacte lancée (`md-iator ...` ou `python md_iator.py ...`) et code
+  de sortie
+- Fichier source : format, taille, nombre de pages, PDF texte ou scanné
+- Mode : fichier unique ou batch (dossier)
 
 ## Workflow
 
-1. **Reproduire** — étapes fiables avant tout changement de code. Noter si l'erreur survient au premier rendu, à la navigation, ou après une interaction.
-2. **Localiser la frontière** — l'erreur vient-elle d'un Server Component, d'un Client Component, d'une Server Action, ou du build ? C'est la question la plus discriminante dans l'App Router.
-3. **Tracer le chemin** — suivre le flux : route → layout → page → fetch → composant.
-4. **Root cause** — cause fondamentale, pas symptôme.
-5. **Fix minimal** — le plus petit changement qui résout la cause. Pas de refactor simultané.
-6. **Valider** — rejouer la reproduction, puis `npm run lint` et `npm run build`.
-7. **Synthèse** — root cause, fix, prévention.
+1. **Reproduire** — établir des étapes fiables avant tout changement de code :
+   la commande exacte sur le plus petit fichier qui déclenche le bug, avec `-o`
+   vers un dossier temporaire pour ne rien écraser.
+2. **Tracer le chemin** — suivre le flux de bout en bout : `main()` (argparse,
+   `_ensure_pandoc`) → `convert_file()` ou `batch_convert()` → calcul du chemin
+   de sortie → `convert_docx()` (pypandoc) ou `convert_pdf()` (pdfplumber) →
+   écriture du `.md`.
+3. **Root cause** — la cause fondamentale, pas le symptôme. Isoler la couche
+   fautive : appeler directement `pypandoc.convert_file` ou
+   `pdfplumber.open(...).pages[n].extract_text()` dans un shell Python pour
+   distinguer un bug de md_iator d'une limite de la bibliothèque.
+4. **Fix minimal** — le plus petit changement qui résout la cause. Pas de
+   refactor en même temps.
+5. **Valider** — rejouer la reproduction, lancer `python -m pytest`, puis un
+   smoke test sur les documents d'exemple (voir `implement`, section
+   Validation).
+6. **Synthèse** — expliquer la cause racine, le fix et la prévention.
 
-## Pièges fréquents Next.js 16 / React 19
+## Pistes fréquentes dans md_iator
 
-- **Hydration mismatch** — rendu serveur ≠ rendu client. Causes usuelles : `Date.now()`, `Math.random()`, `window`/`localStorage` lus pendant le rendu, HTML invalide imbriqué.
-- **`"use client"` manquant** — un hook ou un handler `onClick` dans un Server Component échoue au build.
-- **Fonction passée à un Client Component** — les props traversant la frontière serveur/client doivent être sérialisables.
-- **`params` / `searchParams` non `await`és** — ils sont asynchrones.
-- **Données périmées après mutation** — `revalidatePath` / `revalidateTag` manquant après une Server Action.
-- **Variable d'env `undefined` côté navigateur** — il manque le préfixe `NEXT_PUBLIC_`.
-- **Cache trompeur** — supprimer `.next/` et relancer avant de conclure à un bug de code.
-
-Vérifier la sémantique exacte dans `node_modules/next/dist/docs/` avant de conclure — cette version a des breaking changes.
+- **Section PDF vide** : PDF scanné (image seule), pdfplumber n'extrait aucun
+  texte. Ce n'est pas un bug de md_iator — OCR préalable avec `ocrmypdf`.
+- **Régression d'un bug déjà corrigé** — extension en majuscules ignorée en
+  batch, fichier verrou `~$*.docx` ramassé, `.md` écrasé par une source de même
+  nom, `-o sortie/` traité comme nom de fichier, pandoc vérifié avant
+  `parse_args()`. Chacun a son test dans `tests/test_batch.py` ou
+  `tests/test_cli.py` : partir du test qui échoue.
+- **`-o sortie` sans `/` crée un fichier `sortie`** : comportement voulu en mode
+  fichier unique ; seul un `-o` terminé par `/` est créé comme dossier.
+- **Sortie console mélangée avec la barre de progression** : `print` au lieu
+  de `bar.write` dans une boucle `tqdm`.
+- **Caractères corrompus** : vérifier l'encodage d'écriture (`utf-8`) et ce que
+  renvoie la bibliothèque avant d'accuser le fichier source.
 
 ## Guardrails
 
 - Ne pas corriger le symptôme quand la cause est ailleurs.
-- Pas de broad refactor pendant un bug fix.
-- Retirer les `console.log` de diagnostic avant de livrer.
+- Pas de refactor large pendant un bug fix — séparer les deux.
+- Ajouter un test de régression ciblé dans `tests/` (`write-tests`), et
+  vérifier qu'il échoue sans le fix.
+- Ne jamais lancer de reproduction sans `-o` sur un dossier qui contient déjà
+  des `.md` à garder : la conversion les écrase.
+- Retirer les `print` de diagnostic avant de livrer.

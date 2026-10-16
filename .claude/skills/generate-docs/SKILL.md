@@ -1,35 +1,57 @@
 ---
 name: generate-docs
-description: Crée ou met à jour de la documentation projet. Déclencher quand l'utilisateur dit "documente", "mets à jour le README", "écris les notes de déploiement", "documente ce changement", ou quand un comportement/API/commande change et que la doc n'est pas encore à jour.
+description: Crée ou met à jour de la documentation projet. Déclencher quand l'utilisateur dit "documente", "mets à jour le README", "documente ce changement", ou quand un argument, un format, un message, un code de sortie ou une dépendance change et que la doc n'est pas encore à jour.
 ---
 
 # Generate Docs
 
-Produit une documentation concise, orientée tâche, alignée sur la réalité du code.
+Produit une documentation concise, orientée tâche, alignée sur la réalité du
+code.
 
 Demander si non fourni :
 - Type de document (tutoriel, how-to, référence, explication)
-- Audience et contexte opérationnel
+- Audience et contexte d'usage
 - Périmètre et exclusions
 
 ## Quand mettre à jour la doc
 
-- Comportement, contrat d'API, ou setup qui change → documenter dans le même PR.
-- Nouvelle variable d'env → la documenter avec sa portée (serveur seul ou `NEXT_PUBLIC_*`) et une valeur d'exemple non secrète.
-- Nouvelle commande npm, nouvelle dépendance runtime, nouvelle étape de déploiement.
-- Comportement d'erreur visible par l'utilisateur.
-- Breaking change → note de migration explicite.
+- Nouvel argument ou changement de comportement CLI → documenter dans le même
+  PR.
+- Nouveau format d'entrée, ou changement du Markdown produit.
+- Changement de message, de code de sortie ou de gestion d'erreur visible.
+- Nouvelle dépendance runtime, nouvelle étape d'installation, changement du
+  téléchargement automatique de pandoc.
+- Breaking change → ajouter une note de migration explicite.
+
+## Où écrire
+
+| Contenu | Emplacement | Langue |
+| --- | --- | --- |
+| Présentation, installation, exemples courants | `README.md` | anglais |
+| Référence CLI complète (arguments, modes, codes de sortie, format de sortie) | `docs/usage.md` | anglais |
+| Environnement, architecture, commandes pour Claude | `CLAUDE.md` | français |
+
+Ces trois fichiers se recoupent : un changement de commande ou d'argument se
+répercute dans les trois.
 
 ## Qualité attendue
 
 - Langage concis, précis, orienté action.
-- Commandes copiables et alignées sur les scripts réels de `package.json` (`npm run dev`, `build`, `start`, `lint`).
-- Exemples alignés sur le comportement de production, pas sur un état local.
-- Ne pas documenter d'API Next de mémoire — vérifier dans `node_modules/next/dist/docs/`.
+- Commandes copiables : `md-iator` (après `pip install -e .`) en forme
+  principale, `python md_iator.py` en fallback sans installation.
+- Exemples de sortie copiés d'une vraie exécution, pas inventés. Lancer la
+  commande avec `-o` vers un dossier temporaire pour les capturer.
+- Messages cités exactement comme le code les affiche (`converted: ...`,
+  `error: ...`, `N/M fichiers convertis.`).
+- Dépendances : vérifier que `pyproject.toml` et `requirements.txt` disent la
+  même chose avant de les documenter.
 
-## Surfaces
+## Surfaces requises
 
-- **README** : ce que fait le projet, prérequis, install, lancement local, variables d'env, scripts disponibles.
-- **AGENTS.md** : ne pas éditer le bloc `nextjs-agent-rules` — il est régénéré par `next dev`. Toute règle projet s'ajoute hors de ce bloc.
-- **Notes de déploiement** : plateforme cible, variables d'env requises, commande de build.
-- Doc livrée dans le même PR que le code concerné — si différée, documenter la dette explicitement.
+- **README** : installation et usage à jour.
+- **docs/usage.md** : synchronisé avec `main()` — chaque argument argparse y
+  figure, avec ses défauts.
+- **CLAUDE.md** : section Architecture alignée sur les fonctions réelles de
+  `md_iator.py`.
+- Doc livrée dans le même PR que le code concerné — si différée, documenter la
+  dette explicitement.
