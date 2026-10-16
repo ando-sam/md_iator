@@ -28,8 +28,10 @@ Demander si non fourni :
   - `pandoc_checks` : remplace `ensure_pandoc` et enregistre ses appels.
   - `interrupt_at(n)` : le n-ième appel à `convert_file` lève
     `KeyboardInterrupt` (Ctrl-C) ; les appels suivants passent normalement.
-- `tests/test_cli.py` applique `pandoc_checks` à tous ses tests (autouse) :
-  aucun test ne doit déclencher de téléchargement.
+- `engines` requiert `pandoc_checks`, et `tests/test_cli.py` l'applique à tous
+  ses tests (autouse) : aucun test ne doit déclencher de téléchargement.
+  `tests/test_pandoc.py` teste le vrai `ensure_pandoc` en vidant le cache
+  `md_iator._pandoc_problem.cache_clear()` avant et après chaque test.
 
 ## Priorités de couverture
 
