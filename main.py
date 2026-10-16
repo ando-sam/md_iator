@@ -36,14 +36,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="md-iator",
         description="Convertit des fichiers DOCX et PDF en Markdown.",
+        # Replaced below so its help line reads in French.
+        add_help=False,
+    )
+    parser.add_argument(
+        "-h", "--help", action="help",
+        help="afficher cette aide et quitter",
     )
     parser.add_argument(
         "--version", action="version", version=version(),
         help="afficher la version et quitter",
     )
-    parser.add_argument("input", help="fichier ou dossier source")
+    parser.add_argument("input", metavar="SOURCE", help="fichier ou dossier source")
     parser.add_argument(
         "-o", "--output",
+        metavar="SORTIE",
         help="fichier .md de sortie (mode fichier unique) ou dossier de sortie (mode batch)",
         default=None,
     )
@@ -82,11 +89,11 @@ def main() -> None:
                 return
             try:
                 dest = md_iator.convert_file(src, output)
-                print(f"converted: {dest}")
+                print(f"converti : {dest}")
             except md_iator.EmptyDocumentError as exc:
                 print(f"vide : {src} — {exc}", file=sys.stderr)
             except Exception as exc:
-                print(f"error: {exc}", file=sys.stderr)
+                print(f"erreur : {exc}", file=sys.stderr)
                 sys.exit(1)
     except md_iator.BatchInterrupted as exc:
         print(f"\n{format_summary(exc.summary)}")

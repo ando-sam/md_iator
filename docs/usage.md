@@ -3,14 +3,14 @@
 ## Synopsis
 
 ```
-md-iator <input> [-o <output>] [--skip-existing]
+md-iator SOURCE [-o SORTIE] [--skip-existing]
 md-iator --version
 ```
 
 | Argument | Description |
 |---|---|
-| `input` | Path to a `.docx` / `.pdf` file, or a folder |
-| `-o`, `--output` | Output `.md` file (single-file mode) or output folder (batch mode) |
+| `SOURCE` | Path to a `.docx` / `.pdf` file, or a folder |
+| `-o SORTIE`, `--output SORTIE` | Output `.md` file (single-file mode) or output folder (batch mode) |
 | `--skip-existing` | Leave existing `.md` files untouched instead of overwriting them |
 | `--version` | Print the installed version (`md-iator 0.1.0`) and exit |
 
@@ -18,6 +18,22 @@ Without installation, `python main.py` accepts the same arguments.
 
 Progress bars are drawn on `stderr` only when it is a terminal; they are
 turned off when output is redirected or in CI, so logs stay readable.
+
+### Messages
+
+Everything the tool prints is in French. One line per file, then a summary:
+
+| Prefix | Stream | Meaning |
+|---|---|---|
+| `converti :` | stdout | `.md` written |
+| `vide :` | stderr | PDF with no extractable text, nothing written |
+| `ignoré :` | stderr | existing `.md` kept (`--skip-existing`, single-file mode) |
+| `erreur :` | stderr | conversion failed |
+
+Since 0.2.0 the prefixes are French: `converted:` became `converti :` and
+`error:` became `erreur :`. Scripts that parse the output must be updated.
+The framing printed by Python's `argparse` (`usage:`, `options:`, and its own
+`error:` lines for invalid arguments) stays in English.
 
 ---
 
@@ -86,9 +102,9 @@ The exit code is `0` only if no file failed; `1` otherwise. Empty PDFs
 (see below) are not failures.
 
 ```
-  converted: out/report.md
-  error: documents/bad.pdf — EOF marker not found
-  converted: out/slides.md
+  converti : out/report.md
+  erreur : documents/bad.pdf — EOF marker not found
+  converti : out/slides.md
 
 2 convertis · 1 erreur
 ```
@@ -109,8 +125,8 @@ order: the first one is converted, the next one is reported as an error
 instead of overwriting it.
 
 ```
-  converted: out/report.md
-  error: documents/report.pdf — sortie out/report.md déjà produite par documents/report.docx
+  converti : out/report.md
+  erreur : documents/report.pdf — sortie out/report.md déjà produite par documents/report.docx
 ```
 
 ### Skipping existing outputs and resuming
@@ -218,8 +234,8 @@ reported as an error with an installation hint, while PDFs are still
 converted:
 
 ```
-  error: documents/report.docx — pandoc introuvable et téléchargement impossible (réseau ?). Installer pandoc : https://pandoc.org/installing.html
-  converted: out/slides.md
+  erreur : documents/report.docx — pandoc introuvable et téléchargement impossible (réseau ?). Installer pandoc : https://pandoc.org/installing.html
+  converti : out/slides.md
 
 1 converti · 1 erreur
 ```

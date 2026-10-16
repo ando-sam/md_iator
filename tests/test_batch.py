@@ -41,7 +41,7 @@ def test_batch_continues_after_error(engines, make, tmp_path, capsys):
 
     assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, errors=1)
     assert md_files(out) == ["b.md"]
-    assert f"error: {src / 'a.docx'}" in capsys.readouterr().err
+    assert f"erreur : {src / 'a.docx'}" in capsys.readouterr().err
 
 
 def test_batch_counts_empty_pdf_apart_from_errors(engines, make, tmp_path, capsys):
@@ -97,7 +97,7 @@ def test_batch_collision_reports_error_without_overwrite(
     target = (out or src) / "rapport.md"
     assert target.read_text(encoding="utf-8") == "# depuis docx\n"
     err = capsys.readouterr().err
-    assert f"error: {src / 'rapport.pdf'}" in err
+    assert f"erreur : {src / 'rapport.pdf'}" in err
     assert "déjà produite" in err
 
 
@@ -148,7 +148,7 @@ def test_batch_skipped_source_still_claims_its_output(engines, make, tmp_path, c
     summary = md_iator.batch_convert(src, out, skip_existing=True)
 
     assert summary == md_iator.Summary(skipped=1, errors=1)
-    assert f"error: {src / 'rapport.pdf'}" in capsys.readouterr().err
+    assert f"erreur : {src / 'rapport.pdf'}" in capsys.readouterr().err
 
 
 def test_batch_interrupt_reports_progress(engines, make, tmp_path, interrupt_at):

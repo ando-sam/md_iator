@@ -157,13 +157,13 @@ def batch_convert(
                     continue
                 result = convert_file(src, dest)
                 written[target] = src
-                bar.write(f"  converted: {result}")
+                bar.write(f"  converti : {result}")
                 summary.converted += 1
             except EmptyDocumentError as exc:
                 bar.write(f"  vide : {src} — {exc}", file=sys.stderr)
                 summary.empty += 1
             except Exception as exc:
-                bar.write(f"  error: {src} — {exc}", file=sys.stderr)
+                bar.write(f"  erreur : {src} — {exc}", file=sys.stderr)
                 summary.errors += 1
     except KeyboardInterrupt:
         bar.close()

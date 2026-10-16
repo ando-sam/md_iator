@@ -28,14 +28,14 @@ def test_cli_single_file_succeeds(engines, make, tmp_path, monkeypatch, capsys):
 
     run(monkeypatch, src)
 
-    assert capsys.readouterr().out == f"converted: {tmp_path / 'rapport.md'}\n"
+    assert capsys.readouterr().out == f"converti : {tmp_path / 'rapport.md'}\n"
 
 
 def test_cli_single_file_error_exits_1(engines, make, tmp_path, monkeypatch, capsys):
     src = make(tmp_path / "rapport.docx", corrupt=True)
 
     assert exit_code(monkeypatch, src) == 1
-    assert capsys.readouterr().err == "error: fichier illisible\n"
+    assert capsys.readouterr().err == "erreur : fichier illisible\n"
 
 
 def test_cli_batch_exits_0_when_all_succeed(engines, make, tmp_path, monkeypatch, capsys):
@@ -116,7 +116,7 @@ def test_cli_single_docx_offline_exits_1_without_traceback(
     _pandoc_offline(monkeypatch)
 
     assert exit_code(monkeypatch, src) == 1
-    assert capsys.readouterr().err == "error: pandoc introuvable (simulé)\n"
+    assert capsys.readouterr().err == "erreur : pandoc introuvable (simulé)\n"
 
 
 def test_cli_batch_offline_still_converts_pdfs(
@@ -130,7 +130,7 @@ def test_cli_batch_offline_still_converts_pdfs(
     assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 1
     captured = capsys.readouterr()
     assert captured.out.endswith("\n1 converti · 1 erreur\n")
-    assert f"error: {src / 'a.docx'} — pandoc introuvable (simulé)" in captured.err
+    assert f"erreur : {src / 'a.docx'} — pandoc introuvable (simulé)" in captured.err
     assert "fichier/s" not in captured.err  # no progress bar outside a terminal
 
 
@@ -260,3 +260,10 @@ def test_cli_resume_after_interrupt_converts_only_the_rest(
 
     assert exit_code(monkeypatch, src, "-o", out, "--skip-existing") == 0
     assert capsys.readouterr().out.endswith("\n2 convertis · 1 ignoré\n")
+
+
+def test_cli_help_is_in_french(monkeypatch, capsys):
+    assert exit_code(monkeypatch, "--help") == 0
+    out = capsys.readouterr().out
+    assert "[-o SORTIE] [--skip-existing] SOURCE" in out
+    assert "afficher cette aide et quitter" in out
