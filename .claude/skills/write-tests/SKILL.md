@@ -25,7 +25,9 @@ Demander si non fourni :
     par `\f` (page vide = `None`, comme une page scannée) ;
   - `make(path, content="contenu", corrupt=False)` : crée un fichier source,
     parents compris ; `corrupt=True` fait échouer les deux moteurs ;
-  - `pandoc_checks` : remplace `_ensure_pandoc` et enregistre ses appels.
+  - `pandoc_checks` : remplace `ensure_pandoc` et enregistre ses appels.
+  - `interrupt_at(n)` : le n-ième appel à `convert_file` lève
+    `KeyboardInterrupt` (Ctrl-C) ; les appels suivants passent normalement.
 - `tests/test_cli.py` applique `pandoc_checks` à tous ses tests (autouse) :
   aucun test ne doit déclencher de téléchargement.
 

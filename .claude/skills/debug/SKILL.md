@@ -20,7 +20,7 @@ Demander si non fourni :
    la commande exacte sur le plus petit fichier qui déclenche le bug, avec `-o`
    vers un dossier temporaire pour ne rien écraser.
 2. **Tracer le chemin** — suivre le flux de bout en bout : `main()` (argparse,
-   `_ensure_pandoc`) → `convert_file()` ou `batch_convert()` → calcul du chemin
+   `ensure_pandoc`) → `convert_file()` ou `batch_convert()` → calcul du chemin
    de sortie → `convert_docx()` (pypandoc) ou `convert_pdf()` (pdfplumber) →
    écriture du `.md`.
 3. **Root cause** — la cause fondamentale, pas le symptôme. Isoler la couche
