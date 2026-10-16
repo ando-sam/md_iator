@@ -9,6 +9,9 @@ dependencies = [
     "tqdm>=4.70.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.scripts]
 md-iator = "md_iator:main"
 
@@ -18,3 +21,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["md_iator"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

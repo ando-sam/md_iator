@@ -35,4 +35,6 @@ Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
 - `batch_convert(folder, output_dir)` — `rglob` récursif, extensions insensibles à la casse, ignore les fichiers verrou Word `~$*`, signale en erreur une source dont le `.md` cible a déjà été produit (pas d'écrasement), continue sur erreur
 - `main()` — argparse avec un positional `input` (fichier ou dossier) et `-o/--output` optionnel ; un `-o` terminé par `/` est créé comme dossier ; pandoc n'est vérifié/téléchargé qu'après validation des arguments
 
-Pas de tests, pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
+Tests pytest dans `tests/` : `pip install -e ".[dev]"` puis `python -m pytest`. `tests/conftest.py` remplace pandoc et pdfplumber par des faux moteurs (fixtures `engines`, `make`, `pandoc_checks`) — aucun réseau ni vrai document. Ne pas confondre avec `test/`, qui contient des documents d'exemple locaux non versionnés.
+
+Pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
