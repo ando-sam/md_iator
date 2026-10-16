@@ -104,6 +104,7 @@ instead of overwriting it.
 |---|---|
 | `0` | All conversions succeeded |
 | `1` | At least one file failed (batch), or the single file failed |
+| `2` | Invalid arguments or input path not found — nothing is converted |
 
 ---
 
