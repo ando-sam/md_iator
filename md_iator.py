@@ -1,6 +1,8 @@
 """Convert DOCX and PDF files to Markdown using pypandoc and pdfplumber."""
 
+import os
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pdfplumber
@@ -8,6 +10,17 @@ import pypandoc
 from tqdm import tqdm
 
 SUPPORTED_EXTENSIONS = {".docx", ".pdf"}
+
+
+class EmptyDocumentError(Exception):
+    """No text could be extracted, so no Markdown file is written."""
+
+
+@dataclass
+class Summary:
+    converted: int = 0
+    empty: int = 0
+    errors: int = 0
 
 
 def ensure_pandoc() -> None:
@@ -26,11 +39,17 @@ def convert_docx(src: Path, dest: Path) -> None:
 def convert_pdf(src: Path, dest: Path) -> None:
     with pdfplumber.open(src) as pdf:
         pages = []
+        has_text = False
         for i, page in enumerate(
             tqdm(pdf.pages, desc=src.name, unit="page", leave=False), start=1
         ):
-            text = page.extract_text() or ""
-            pages.append(f"## Page {i}\n\n{text.strip()}")
+            text = (page.extract_text() or "").strip()
+            has_text = has_text or bool(text)
+            pages.append(f"## Page {i}\n\n{text}")
+    if not has_text:
+        raise EmptyDocumentError(
+            "aucun texte extrait (PDF scanné ? passer par ocrmypdf)"
+        )
     dest.write_text("\n\n---\n\n".join(pages), encoding="utf-8")
 
 
@@ -48,15 +67,22 @@ def convert_file(src: Path, output: Path | None = None) -> Path:
 
     dest.parent.mkdir(parents=True, exist_ok=True)
 
-    if ext == ".docx":
-        convert_docx(src, dest)
-    elif ext == ".pdf":
-        convert_pdf(src, dest)
+    # Convert into a temporary sibling, then rename: a failed or interrupted
+    # conversion never leaves a truncated .md nor clobbers the previous one.
+    tmp = dest.with_name(f".{dest.name}.{os.getpid()}.tmp")
+    try:
+        if ext == ".docx":
+            convert_docx(src, tmp)
+        elif ext == ".pdf":
+            convert_pdf(src, tmp)
+        tmp.replace(dest)
+    finally:
+        tmp.unlink(missing_ok=True)
 
     return dest
 
 
-def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, int]:
+def batch_convert(folder: Path, output_dir: Path | None = None) -> Summary:
     # Extension matched case-insensitively; "~$" files are Word lock files.
     files = [
         p for p in folder.rglob("*")
@@ -64,7 +90,7 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
         and p.suffix.lower() in SUPPORTED_EXTENSIONS
         and not p.name.startswith("~$")
     ]
-    ok, errors = 0, 0
+    summary = Summary()
     written: dict[Path, Path] = {}
     bar = tqdm(sorted(files), desc="fichiers", unit="fichier")
     for src in bar:
@@ -83,9 +109,12 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
             result = convert_file(src, dest)
             written[target] = src
             bar.write(f"  converted: {result}")
-            ok += 1
+            summary.converted += 1
+        except EmptyDocumentError as exc:
+            bar.write(f"  vide : {src} — {exc}", file=sys.stderr)
+            summary.empty += 1
         except Exception as exc:
             bar.write(f"  error: {src} — {exc}", file=sys.stderr)
-            errors += 1
-    return ok, errors
+            summary.errors += 1
+    return summary
 

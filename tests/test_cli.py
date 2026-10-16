@@ -3,6 +3,7 @@ import sys
 import pytest
 
 import main
+import md_iator
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +43,7 @@ def test_cli_batch_exits_0_when_all_succeed(engines, make, tmp_path, monkeypatch
     make(src / "b.pdf")
 
     assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 0
-    assert "2/2 fichiers convertis." in capsys.readouterr().out
+    assert capsys.readouterr().out.endswith("\n2 convertis\n")
 
 
 def test_cli_batch_exits_1_when_any_fails(engines, make, tmp_path, monkeypatch, capsys):
@@ -51,7 +52,7 @@ def test_cli_batch_exits_1_when_any_fails(engines, make, tmp_path, monkeypatch, 
     make(src / "b.pdf")
 
     assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 1
-    assert "1/2 fichiers convertis." in capsys.readouterr().out
+    assert capsys.readouterr().out.endswith("\n1 converti · 1 erreur\n")
 
 
 def test_cli_missing_path_exits_2_without_pandoc_check(
@@ -95,3 +96,41 @@ def test_cli_output_without_slash_is_file_name(engines, make, tmp_path, monkeypa
     run(monkeypatch, src, "-o", out)
 
     assert out.is_file()
+
+
+def test_cli_single_empty_pdf_exits_0_without_file(engines, make, tmp_path, monkeypatch, capsys):
+    src = make(tmp_path / "scan.pdf", "\f")
+
+    run(monkeypatch, src)
+
+    assert capsys.readouterr().err.endswith(
+        f"vide : {src} — aucun texte extrait (PDF scanné ? passer par ocrmypdf)\n"
+    )
+    assert not (tmp_path / "scan.md").exists()
+
+
+def test_cli_batch_empty_pdf_is_not_an_error(engines, make, tmp_path, monkeypatch, capsys):
+    src = tmp_path / "src"
+    make(src / "scan.pdf", "\f")
+
+    assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 0
+    assert capsys.readouterr().out.endswith("\n0 converti · 1 vide\n")
+
+
+def test_cli_folder_without_sources(engines, tmp_path, monkeypatch, capsys):
+    (tmp_path / "notes.txt").write_text("x", encoding="utf-8")
+
+    assert exit_code(monkeypatch, tmp_path) == 0
+    assert capsys.readouterr().out == f"aucun fichier .docx ou .pdf dans {tmp_path}\n"
+
+
+@pytest.mark.parametrize(
+    "summary, expected",
+    [
+        (md_iator.Summary(converted=1), "1 converti"),
+        (md_iator.Summary(converted=2, empty=3, errors=2), "2 convertis · 3 vides · 2 erreurs"),
+        (md_iator.Summary(errors=1), "0 converti · 1 erreur"),
+    ],
+)
+def test_format_summary_plural_and_omits_zero(summary, expected):
+    assert main.format_summary(summary) == expected

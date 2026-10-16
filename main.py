@@ -9,6 +9,19 @@ from pathlib import Path
 import md_iator
 
 
+def format_summary(summary: md_iator.Summary) -> str:
+    def count(n: int, word: str) -> str:
+        # French plural: singular for 0 and 1.
+        return f"{n} {word}{'s' if n > 1 else ''}"
+
+    parts = [count(summary.converted, "converti")]
+    if summary.empty:
+        parts.append(count(summary.empty, "vide"))
+    if summary.errors:
+        parts.append(count(summary.errors, "erreur"))
+    return " · ".join(parts)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="md_iator",
@@ -36,14 +49,19 @@ def main() -> None:
     md_iator.ensure_pandoc()
 
     if src.is_dir():
-        ok, errors = md_iator.batch_convert(src, output)
-        total = ok + errors
-        print(f"\n{ok}/{total} fichiers convertis.")
-        sys.exit(1 if errors else 0)
+        summary = md_iator.batch_convert(src, output)
+        if summary == md_iator.Summary():
+            extensions = " ou ".join(sorted(md_iator.SUPPORTED_EXTENSIONS))
+            print(f"aucun fichier {extensions} dans {src}")
+        else:
+            print(f"\n{format_summary(summary)}")
+        sys.exit(1 if summary.errors else 0)
     else:
         try:
             dest = md_iator.convert_file(src, output)
             print(f"converted: {dest}")
+        except md_iator.EmptyDocumentError as exc:
+            print(f"vide : {src} — {exc}", file=sys.stderr)
         except Exception as exc:
             print(f"error: {exc}", file=sys.stderr)
             sys.exit(1)

@@ -74,15 +74,24 @@ out/
 
 If a single file fails (corrupted, unsupported encoding, etc.), the error is
 printed to `stderr` and conversion continues with the remaining files.
-The exit code is `0` only if every file succeeded; `1` otherwise.
+The exit code is `0` only if no file failed; `1` otherwise. Empty PDFs
+(see below) are not failures.
 
 ```
   converted: out/report.md
   error: documents/bad.pdf — EOF marker not found
   converted: out/slides.md
 
-2/3 fichiers convertis.
+2 convertis · 1 erreur
 ```
+
+The final summary counts converted files, empty PDFs and errors; a zero count
+is left out (except `convertis`). A folder with no `.docx` or `.pdf` prints
+`aucun fichier .docx ou .pdf dans <folder>` and exits with `0`.
+
+Each `.md` is written to a temporary file next to its destination, then
+renamed. A failed or interrupted conversion (Ctrl-C included) never leaves a
+truncated `.md` behind, and never replaces a previous `.md`.
 
 ### Name collisions
 
@@ -136,8 +145,17 @@ First page content...
 Second page content...
 ```
 
-Scanned PDFs (image-only) produce empty sections. For OCR support,
-pre-process with a tool such as `ocrmypdf` before converting.
+A PDF with no extractable text at all (typically a scanned, image-only PDF)
+produces **no** `.md` file. It is reported on `stderr` and counted as empty,
+not as an error:
+
+```
+  vide : scans/invoice.pdf — aucun texte extrait (PDF scanné ? passer par ocrmypdf)
+```
+
+Run it through an OCR tool such as `ocrmypdf` first, then convert again. A PDF
+where only some pages have no text is converted normally, with empty sections
+for those pages.
 
 ---
 

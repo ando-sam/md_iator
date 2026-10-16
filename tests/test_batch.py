@@ -13,7 +13,7 @@ def test_batch_recursive_mirrors_tree_under_output(engines, make, tmp_path):
     make(src / "archive" / "old.pdf")
     out = tmp_path / "out"
 
-    assert md_iator.batch_convert(src, out) == (2, 0)
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=2)
     assert md_files(out) == ["archive/old.md", "rapport.md"]
 
 
@@ -21,7 +21,7 @@ def test_batch_without_output_writes_next_to_sources(engines, make, tmp_path):
     make(tmp_path / "a.docx")
     make(tmp_path / "sub" / "b.pdf")
 
-    assert md_iator.batch_convert(tmp_path) == (2, 0)
+    assert md_iator.batch_convert(tmp_path) == md_iator.Summary(converted=2)
     assert md_files(tmp_path) == ["a.md", "sub/b.md"]
 
 
@@ -30,7 +30,7 @@ def test_batch_ignores_unsupported_files(engines, make, tmp_path):
     make(src / "notes.txt")
     make(src / "a.docx")
 
-    assert md_iator.batch_convert(src, tmp_path / "out") == (1, 0)
+    assert md_iator.batch_convert(src, tmp_path / "out") == md_iator.Summary(converted=1)
 
 
 def test_batch_continues_after_error(engines, make, tmp_path, capsys):
@@ -39,9 +39,31 @@ def test_batch_continues_after_error(engines, make, tmp_path, capsys):
     make(src / "b.pdf")
     out = tmp_path / "out"
 
-    assert md_iator.batch_convert(src, out) == (1, 1)
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, errors=1)
     assert md_files(out) == ["b.md"]
     assert f"error: {src / 'a.docx'}" in capsys.readouterr().err
+
+
+def test_batch_counts_empty_pdf_apart_from_errors(engines, make, tmp_path, capsys):
+    src = tmp_path / "src"
+    make(src / "scan.pdf", "\f")
+    make(src / "a.docx")
+    out = tmp_path / "out"
+
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, empty=1)
+    assert md_files(out) == ["a.md"]
+    assert f"vide : {src / 'scan.pdf'} — aucun texte extrait" in capsys.readouterr().err
+
+
+def test_batch_empty_source_does_not_claim_output(engines, make, tmp_path):
+    src = tmp_path / "src"
+    # "rapport.PDF" sorts before "rapport.docx", so the empty one runs first.
+    make(src / "rapport.PDF", "\f")
+    make(src / "rapport.docx", "depuis docx")
+    out = tmp_path / "out"
+
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, empty=1)
+    assert (out / "rapport.md").read_text(encoding="utf-8") == "# depuis docx\n"
 
 
 def test_batch_includes_uppercase_extension(engines, make, tmp_path):
@@ -50,7 +72,7 @@ def test_batch_includes_uppercase_extension(engines, make, tmp_path):
     make(src / "Rapport.DOCX")
     out = tmp_path / "out"
 
-    assert md_iator.batch_convert(src, out) == (2, 0)
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=2)
     assert md_files(out) == ["Rapport.md", "SCAN.md"]
 
 
@@ -59,7 +81,7 @@ def test_batch_skips_word_lock_files(engines, make, tmp_path):
     make(src / "rapport.docx")
     make(src / "~$rapport.docx", corrupt=True)
 
-    assert md_iator.batch_convert(src, tmp_path / "out") == (1, 0)
+    assert md_iator.batch_convert(src, tmp_path / "out") == md_iator.Summary(converted=1)
 
 
 @pytest.mark.parametrize("with_output", [True, False])
@@ -71,7 +93,7 @@ def test_batch_collision_reports_error_without_overwrite(
     make(src / "rapport.pdf", "depuis pdf")
     out = tmp_path / "out" if with_output else None
 
-    assert md_iator.batch_convert(src, out) == (1, 1)
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, errors=1)
     target = (out or src) / "rapport.md"
     assert target.read_text(encoding="utf-8") == "# depuis docx\n"
     err = capsys.readouterr().err
@@ -85,7 +107,7 @@ def test_batch_collision_second_converts_when_first_failed(engines, make, tmp_pa
     make(src / "rapport.pdf", "depuis pdf")
     out = tmp_path / "out"
 
-    assert md_iator.batch_convert(src, out) == (1, 1)
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1, errors=1)
     assert (out / "rapport.md").read_text(encoding="utf-8") == (
         "## Page 1\n\ndepuis pdf"
     )

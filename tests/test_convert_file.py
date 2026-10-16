@@ -48,3 +48,30 @@ def test_source_not_modified(engines, make, tmp_path):
     md_iator.convert_file(src)
 
     assert src.read_text(encoding="utf-8") == "Titre"
+
+
+def test_failed_conversion_leaves_no_file(engines, make, tmp_path):
+    src = make(tmp_path / "rapport.docx", corrupt=True)
+
+    with pytest.raises(RuntimeError):
+        md_iator.convert_file(src)
+
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rapport.docx"]
+
+
+@pytest.mark.parametrize("exc", [RuntimeError("panne"), KeyboardInterrupt()])
+def test_interrupted_conversion_keeps_previous_output(make, monkeypatch, tmp_path, exc):
+    src = make(tmp_path / "rapport.pdf")
+    previous = make(tmp_path / "rapport.md", "ancienne version")
+
+    def write_half_then_fail(src, dest):
+        dest.write_text("tronqué", encoding="utf-8")
+        raise exc
+
+    monkeypatch.setattr(md_iator, "convert_pdf", write_half_then_fail)
+
+    with pytest.raises(type(exc)):
+        md_iator.convert_file(src)
+
+    assert previous.read_text(encoding="utf-8") == "ancienne version"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["rapport.md", "rapport.pdf"]
