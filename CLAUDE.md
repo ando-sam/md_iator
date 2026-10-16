@@ -50,3 +50,7 @@ Tests pytest dans `tests/` : `pip install -e ".[dev]"` puis `python -m pytest`. 
 CI : `.github/workflows/tests.yml` lance la suite sur ubuntu, macOS et Windows, Python 3.10 à 3.14, avec pandoc installé (le test réel ne s'exécute donc qu'en CI ou si pandoc est présent).
 
 Pas de linter configuré. `docs/usage.md` contient la référence CLI complète.
+
+## Coordination entre sessions
+
+Plusieurs sessions Claude Code peuvent travailler en même temps dans cet arbre de travail. `.claude/TACHES.md` (local, non versionné) est leur liste de tâches commune et leur journal de messages : le relire avant toute tâche, y inscrire la tâche et les fichiers qu'elle modifie, et suivre les règles en tête du fichier. Jamais `git add -A` ni `git commit -a` : n'indexer que ses propres fichiers.
