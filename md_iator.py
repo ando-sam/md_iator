@@ -2,6 +2,8 @@
 
 import functools
 import os
+import re
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,9 +70,22 @@ def ensure_pandoc() -> None:
         raise PandocUnavailableError(problem)
 
 
+def media_dir(dest: Path) -> Path:
+    # Spaces and punctuation would break the image links in CommonMark.
+    slug = re.sub(r"[^\w.-]+", "_", dest.stem).strip("_") or "document"
+    return dest.with_name(f"{slug}_media")
+
+
 def convert_docx(src: Path, dest: Path) -> None:
     ensure_pandoc()
-    pypandoc.convert_file(str(src), "markdown", outputfile=str(dest))
+    # Run pandoc from dest's folder so image links are relative to the .md.
+    pypandoc.convert_file(
+        str(src.resolve()),
+        "markdown",
+        outputfile=str(dest.resolve()),
+        extra_args=[f"--extract-media={media_dir(dest).name}"],
+        cworkdir=str(dest.parent.resolve()),
+    )
 
 
 def convert_pdf(src: Path, dest: Path) -> None:
@@ -107,19 +122,35 @@ def convert_file(src: Path, output: Path | None = None) -> Path:
     dest = output_path(src, output)
     dest.parent.mkdir(parents=True, exist_ok=True)
 
-    # Convert into a temporary sibling, then rename: a failed or interrupted
-    # conversion never leaves a truncated .md nor clobbers the previous one.
-    tmp = dest.with_name(f".{dest.name}.{os.getpid()}.tmp")
+    # Convert inside a temporary sibling folder, then move the result into
+    # place: a failed or interrupted conversion never leaves a truncated .md
+    # nor clobbers the previous one.
+    stage = dest.with_name(f".{dest.name}.{os.getpid()}.tmp")
+    stage.mkdir(exist_ok=True)
     try:
+        staged = stage / dest.name
         if ext == ".docx":
-            convert_docx(src, tmp)
+            convert_docx(src, staged)
         elif ext == ".pdf":
-            convert_pdf(src, tmp)
-        tmp.replace(dest)
+            convert_pdf(src, staged)
+        _merge_media(media_dir(staged), media_dir(dest))
+        staged.replace(dest)
     finally:
-        tmp.unlink(missing_ok=True)
+        shutil.rmtree(stage, ignore_errors=True)
 
     return dest
+
+
+def _merge_media(staged: Path, final: Path) -> None:
+    # Moved file by file into the existing folder, which is never deleted:
+    # it may hold files the user put there.
+    if not staged.is_dir():
+        return
+    for file in staged.rglob("*"):
+        if file.is_file():
+            target = final / file.relative_to(staged)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            file.replace(target)
 
 
 def batch_convert(
@@ -144,19 +175,25 @@ def batch_convert(
             else:
                 dest = None
             target = dest if dest is not None else src.with_suffix(".md")
+            # A DOCX also claims its images folder: "a b.docx" and "a_b.docx"
+            # would otherwise mix their images in "a_b_media/".
+            claims = [target]
+            if src.suffix.lower() == ".docx":
+                claims.append(media_dir(target))
             try:
-                if target in written:
-                    raise ValueError(
-                        f"sortie {target} déjà produite par {written[target]}"
-                    )
+                for claim in claims:
+                    if claim in written:
+                        raise ValueError(
+                            f"sortie {claim} déjà produite par {written[claim]}"
+                        )
                 if skip_existing and target.exists():
                     # Still claims the target, so a same-named source that
                     # follows is reported as a collision rather than skipped.
-                    written[target] = src
+                    written.update(dict.fromkeys(claims, src))
                     summary.skipped += 1
                     continue
                 result = convert_file(src, dest)
-                written[target] = src
+                written.update(dict.fromkeys(claims, src))
                 bar.write(f"  converti : {result}")
                 summary.converted += 1
             except EmptyDocumentError as exc:

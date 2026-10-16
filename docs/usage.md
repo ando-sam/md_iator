@@ -186,6 +186,31 @@ Pandoc converts DOCX with full structural fidelity:
 - Bold / italic / inline code
 - Tables → GitHub-flavored Markdown tables
 - Hyperlinks → `[text](url)`
+- Images → extracted next to the `.md`, see below
+
+#### Images
+
+Images embedded in a DOCX are extracted into a folder next to the `.md`, and
+the Markdown links to them with relative paths, so they display wherever the
+`.md` and its folder are moved together:
+
+```
+out/
+├── Devis été (v2).md                 ![logo](Devis_été_v2_media/media/rId9.png)
+└── Devis_été_v2_media/
+    └── media/
+        └── rId9.png
+```
+
+- The folder is named after the `.md`, with spaces and punctuation replaced by
+  `_` (they would break the links in standard Markdown).
+- A DOCX without images creates no folder.
+- Converting again overwrites the extracted images but never deletes the
+  folder or other files in it.
+- Two DOCX whose names give the same folder (`a b.docx` and `a_b.docx`) are a
+  name collision in batch mode: the second one is reported as an error.
+- Image sizes from Word are kept as pandoc attributes
+  (`{width="…" height="…"}`), which some Markdown viewers show as plain text.
 
 ### PDF
 

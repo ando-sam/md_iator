@@ -1,7 +1,8 @@
 """Fake conversion engines, so tests need neither pandoc nor real PDF files.
 
 A fake source file is plain UTF-8 text:
-- `.docx` converts to "# <content>\\n";
+- `.docx` converts to "# <content>\\n"; if the content contains IMAGE, the
+  fake pandoc also extracts one image, the way `--extract-media` does;
 - `.pdf` holds its pages separated by form feeds (an empty page extracts as
   None, like pdfplumber on an image-only page);
 - a file created with `corrupt=True` makes both engines raise.
@@ -14,6 +15,7 @@ import pytest
 import md_iator
 
 CORRUPT = "CORRUPT"
+IMAGE = "IMAGE"
 
 
 class FakePage:
@@ -45,8 +47,16 @@ def _read(path) -> str:
 @pytest.fixture
 def engines(monkeypatch, pandoc_checks):
     # Requesting pandoc_checks keeps every conversion test off the network.
-    def convert_file(source, to, outputfile):
-        Path(outputfile).write_text(f"# {_read(source)}\n", encoding="utf-8")
+    def convert_file(source, to, outputfile, extra_args=(), cworkdir=None):
+        content = _read(source)
+        text = f"# {content}\n"
+        media = [a.split("=", 1)[1] for a in extra_args if a.startswith("--extract-media=")]
+        if IMAGE in content and media:
+            image = Path(cworkdir) / media[0] / "media" / "image1.png"
+            image.parent.mkdir(parents=True, exist_ok=True)
+            image.write_bytes(b"\x89PNG fake")
+            text += f"\n![logo]({media[0]}/media/image1.png)\n"
+        Path(outputfile).write_text(text, encoding="utf-8")
 
     monkeypatch.setattr(md_iator.pypandoc, "convert_file", convert_file)
     monkeypatch.setattr(
