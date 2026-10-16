@@ -2,6 +2,17 @@
 name = "md-iator"
 version = "0.1.0"
 description = "Convertit des fichiers DOCX et PDF en Markdown."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ando" }]
+keywords = ["markdown", "docx", "pdf", "pandoc", "converter", "cli"]
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
 requires-python = ">=3.10"
 dependencies = [
     "pypandoc>=1.17",
@@ -12,11 +23,15 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
+[project.urls]
+Repository = "https://github.com/ando-sam/md_iator"
+Issues = "https://github.com/ando-sam/md_iator/issues"
+
 [project.scripts]
 md-iator = "main:main"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
