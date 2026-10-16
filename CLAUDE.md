@@ -33,7 +33,7 @@ Paquet `md_iator/` :
 
 - `ensure_pandoc()` — vérifie pandoc, le télécharge s'il est absent ; appelé par `convert_docx` (donc seulement si un DOCX est vraiment converti) ; résultat mis en cache par `_pandoc_problem()` (`functools.cache`) — un téléchargement raté n'est tenté qu'une fois et lève `PandocUnavailableError` (message lisible + lien d'installation)
 - `media_dir(dest)` — dossier d'images d'un DOCX, à côté du `.md` : `<nom>_media/`, espaces et ponctuation remplacés par `_` (liens CommonMark valides)
-- `convert_docx(src, dest)` — délègue à `pypandoc.convert_file`, lancé depuis le dossier de `dest` avec `--extract-media` pour des liens d'images relatifs au `.md`
+- `convert_docx(src, dest)` — délègue à `pypandoc.convert_file` en sortie `gfm` (tableaux pipe ou `<table>` HTML, images en `![](…)` ou `<img src=…>` ; pas le Markdown pandoc, dont les tableaux et attributs `{…}` ne s'affichent pas dans VSCode/GitHub), lancé depuis le dossier de `dest` avec `--extract-media` pour des liens d'images relatifs au `.md`
 - `convert_pdf(src, dest)` — extrait le texte page par page avec `pdfplumber`, insère des séparateurs `---` entre les pages ; lève `EmptyDocumentError` si aucune page n'a de texte (PDF scanné), sans rien écrire
 - `output_path(src, output)` — calcule le chemin du `.md` (à côté de la source, dans un dossier existant, ou fichier explicite)
 - `convert_file(src, output)` — dispatch par extension, chemin via `output_path` ; convertit dans un dossier temporaire voisin (`.<nom>.md.<pid>.tmp/`), puis déplace les images (fusion, le dossier `_media` existant n'est jamais supprimé) et renomme le `.md` (jamais de `.md` tronqué)

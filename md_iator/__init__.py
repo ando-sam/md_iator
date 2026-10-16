@@ -79,9 +79,11 @@ def media_dir(dest: Path) -> Path:
 def convert_docx(src: Path, dest: Path) -> None:
     ensure_pandoc()
     # Run pandoc from dest's folder so image links are relative to the .md.
+    # GFM rather than pandoc's own Markdown: VSCode and GitHub render its
+    # tables, and it has no {width=…} attributes to show as plain text.
     pypandoc.convert_file(
         str(src.resolve()),
-        "markdown",
+        "gfm",
         outputfile=str(dest.resolve()),
         extra_args=[f"--extract-media={media_dir(dest).name}"],
         cworkdir=str(dest.parent.resolve()),

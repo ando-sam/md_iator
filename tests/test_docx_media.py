@@ -8,14 +8,18 @@ import pytest
 
 import md_iator
 
-IMAGE_LINK = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
+# GFM has no image attributes: pandoc writes ![alt](path), or an HTML
+# <img src="path"> when the image has a size or a caption.
+# Inside a quote block, the tag spans lines prefixed with "> ".
+IMAGE_LINK = re.compile(r'!\[[^\]]*\]\(([^)\s]+)|<img\b.*?\bsrc="([^"]+)"', re.DOTALL)
 PIXEL_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
 
 
 def image_links(md: Path) -> list[str]:
-    return [unquote(link) for link in IMAGE_LINK.findall(md.read_text(encoding="utf-8"))]
+    text = md.read_text(encoding="utf-8")
+    return [unquote(link or src) for link, src in IMAGE_LINK.findall(text)]
 
 
 def dead_links(md: Path) -> list[str]:
@@ -121,3 +125,19 @@ def test_real_pandoc_docx_image_links_resolve(tmp_path):
     links = image_links(dest)
     assert len(links) == 1 and links[0].startswith("Mon_rapport_media/")
     assert dead_links(dest) == []
+
+
+@pytest.mark.skipif(not _pandoc_available(), reason="pandoc absent (pas de téléchargement en test)")
+def test_real_pandoc_docx_gives_gfm_tables_without_attributes(tmp_path):
+    (tmp_path / "pixel.png").write_bytes(PIXEL_PNG)
+    src = tmp_path / "rapport.docx"
+    pypandoc.convert_text(
+        "# Titre\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n![](pixel.png){width=1in}\n",
+        "docx", format="md", outputfile=str(src), cworkdir=str(tmp_path),
+    )
+
+    text = md_iator.convert_file(src).read_text(encoding="utf-8")
+
+    assert re.search(r"^\|\s*a\s*\|\s*b\s*\|$", text, re.MULTILINE)
+    assert "{width=" not in text and "{#" not in text
+    assert dead_links(tmp_path / "rapport.md") == []

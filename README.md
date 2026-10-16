@@ -64,7 +64,7 @@ full reference.
 
 | Input | Engine | Output |
 |---|---|---|
-| `.docx` | pandoc | Headings, lists, bold/italic, tables, links; images extracted to `<name>_media/` next to the `.md`, with working relative links |
+| `.docx` | pandoc | GitHub-flavored Markdown, as rendered by VSCode and GitHub: headings, lists, bold/italic, tables, links; images extracted to `<name>_media/` next to the `.md`, with working relative links |
 | `.pdf` | pdfplumber | Raw text, one `## Page N` section per page, separated by `---` |
 
 ### Built for folders
@@ -112,8 +112,9 @@ full reference.
 - **Scanned PDFs**: there is no OCR. Run them through
   [ocrmypdf](https://ocrmypdf.readthedocs.io/) first, then convert again.
 - **PDF layout**: only the text is extracted — no headings, tables or images.
-- **DOCX image sizes** are kept as pandoc attributes
-  (`{width="…" height="…"}`), which some Markdown viewers show as text.
+- **DOCX heading numbers** added automatically by Word (`A.`, `1.1`) are
+  lost, and the Word table of contents is copied with links that do not lead
+  to the headings in VSCode or on GitHub.
 - **Offline first run**: if pandoc is missing and cannot be downloaded, each
   `.docx` fails with an installation hint; PDFs are still converted. Install
   pandoc yourself in that case: <https://pandoc.org/installing.html>.
@@ -125,7 +126,9 @@ full reference.
 The message prefixes are now French: `converted:` became `converti :` and
 `error:` became `erreur :`, and the summary reads `3 convertis · 1 vide`
 instead of `N/M fichiers convertis.`. Update any script that parses the
-output. See [CHANGELOG.md](CHANGELOG.md).
+output. DOCX files are now converted to GitHub-flavored Markdown instead of
+pandoc's own Markdown: convert them again to get tables that VSCode and
+GitHub display. See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

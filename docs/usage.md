@@ -180,14 +180,26 @@ stopped.
 
 ### DOCX
 
-Pandoc converts DOCX with full structural fidelity:
+Pandoc converts DOCX to GitHub-flavored Markdown (GFM), the dialect that
+VSCode's preview and GitHub render:
 
 - ATX headings (`# H1`, `## H2`, …)
 - Bullet and numbered lists
 - Bold / italic / inline code
-- Tables → GitHub-flavored Markdown tables
+- Tables → GFM pipe tables. A table that pipe tables cannot express (a table
+  nested in a cell, a cell with several paragraphs) is kept as an HTML
+  `<table>`, which GFM viewers render too.
 - Hyperlinks → `[text](url)`
 - Images → extracted next to the `.md`, see below
+
+Not carried over from Word:
+
+- Heading numbers added automatically by Word (`A.`, `B.`, `1.1`): the
+  heading text is kept, the number is lost. Numbers typed in the heading
+  itself are kept.
+- The table of contents is copied as a list of links followed by Word page
+  numbers; in VSCode or on GitHub its links do not lead to the headings.
+- Page headers and footers.
 
 #### Images
 
@@ -210,8 +222,13 @@ out/
   folder or other files in it.
 - Two DOCX whose names give the same folder (`a b.docx` and `a_b.docx`) are a
   name collision in batch mode: the second one is reported as an error.
-- Image sizes from Word are kept as pandoc attributes
-  (`{width="…" height="…"}`), which some Markdown viewers show as plain text.
+- An image with a size or a caption in Word is written as an HTML tag, since
+  GFM has no syntax for them:
+
+  ```html
+  <img src="Devis_été_v2_media/media/rId9.png"
+  style="width:2in;height:1in" />
+  ```
 
 ### PDF
 

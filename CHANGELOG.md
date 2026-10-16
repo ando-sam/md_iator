@@ -15,6 +15,12 @@ All notable changes to md_iator. The format follows
 - The code now lives in the `md_iator/` package. Without installation, run
   `python -m md_iator` instead of `python md_iator.py`. The installed
   `md-iator` command is unchanged.
+- DOCX files are converted to GitHub-flavored Markdown instead of pandoc's own
+  Markdown. Tables were pandoc grid or multiline tables, which VSCode and
+  GitHub do not display as tables; they are now pipe tables, or HTML
+  `<table>` when a cell holds a nested table or several paragraphs. Image
+  sizes become `<img … style="width:…">` instead of `{width="…"}` attributes
+  shown as plain text. Tools that read pandoc's Markdown attributes lose them.
 
 ### Added
 
