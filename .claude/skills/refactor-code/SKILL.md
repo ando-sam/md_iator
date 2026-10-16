@@ -22,13 +22,13 @@ Demander si non fourni :
 - Appliquer des changements petits et vérifiables, étape par étape.
 - Respecter le découpage existant : un `convert_<format>(src, dest)` par
   moteur, dispatch et calcul du chemin dans `convert_file`, parcours dans
-  `batch_convert`, argparse et sortie de processus dans `main`.
-- Rester dans `md_iator.py` : le découper en package est une décision
-  d'architecture (`architecte-projet`), pas un refactor.
+  `batch_convert`, argparse et sortie de processus dans `cli.main`.
+- Garder les deux modules du paquet (`__init__.py`, `cli.py`) : en ajouter
+  ou en scinder un est une décision d'architecture (`architecte-projet`), pas
+  un refactor.
 - Aucun formateur ni linter n'est configuré : ne pas reformater le fichier
   entier, garder le style en place (type hints, `pathlib`, f-strings).
 - Ne jamais mélanger du feature work dans un refactor pur — séparer les deux.
 - Mettre à jour ou ajouter des tests quand on refactore un chemin risqué.
-- Vérifier après chaque étape : `python -m py_compile md_iator.py`, les tests
-  s'il y en a, et un smoke test sur `test/` (voir `implement`, section
+- Vérifier après chaque étape : `python -m pytest` et un smoke test sur `test/` (voir `implement`, section
   Validation) dont la sortie doit rester identique à celle d'avant le refactor.

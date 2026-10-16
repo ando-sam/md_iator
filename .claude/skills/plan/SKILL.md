@@ -11,7 +11,7 @@ entier, utiliser `architecte-projet`.
 
 ## Processus
 
-1. **Collecte de contexte** — lire `CLAUDE.md`, `md_iator.py` et
+1. **Collecte de contexte** — lire `CLAUDE.md`, le paquet `md_iator/` et
    `docs/usage.md` ; identifier les contrats existants (arguments CLI, codes de
    sortie, calcul du chemin de sortie, format du Markdown produit, signatures
    des fonctions `convert_*`).
@@ -33,8 +33,8 @@ entier, utiliser `architecte-projet`.
   chemin de sortie) est une décision à faire valider, pas une étape.
 - Nouvelle dépendance : la justifier, et prévoir sa déclaration dans
   `pyproject.toml` **et** `requirements.txt`.
-- Rester dans `md_iator.py` tant que c'est tenable ; un découpage en package
-  relève d'`architecte-projet`.
+- Garder les deux modules du paquet (`__init__.py` pour la conversion,
+  `cli.py` pour la CLI) ; en ajouter un relève d'`architecte-projet`.
 - Prévoir la mise à jour de `README.md`, `docs/usage.md` et `CLAUDE.md` comme
   étape si le comportement visible change.
 - Ne pas planifier un refactor en même temps qu'un fix — séparer les deux.

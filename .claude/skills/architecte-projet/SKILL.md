@@ -5,7 +5,8 @@ description: >
   analyse des exigences, proposition d'architecture + arborescence de
   fichiers, puis TODO d'implémentation priorisé. Déclencher quand
   l'utilisateur décrit un module entier à construire — nouveau moteur de
-  conversion, découpage de `md_iator.py` en package, mode serveur/API, etc. —
+  conversion, découpage du paquet `md_iator/` en modules, mode serveur/API,
+  etc. —
   et veut d'abord une vue d'ensemble ("agis en architecte", "avant de coder je
   veux l'analyse", "propose une architecture", "fais le plan complet du
   projet"). Différent de `plan` (planifie UNE tâche précise dans le code
@@ -31,21 +32,23 @@ coûtent qu'une relecture.
 
 ## Lire le dépôt avant de proposer
 
-Avant d'écrire quoi que ce soit : `CLAUDE.md`, `md_iator.py` en entier (il est
-court), `pyproject.toml`, `docs/usage.md`. Le dépôt a déjà un découpage clair
+Avant d'écrire quoi que ce soit : `CLAUDE.md`, le paquet `md_iator/` en entier
+(il est court), `pyproject.toml`, `docs/usage.md`. Le dépôt a déjà un découpage clair
 — un `convert_<format>(src, dest)` par moteur, `convert_file` pour le dispatch
 et le calcul du chemin de sortie, `batch_convert` pour le parcours récursif,
-`main` pour argparse. Une architecture qui réinvente une structure déjà
+`cli.main` pour argparse. Une architecture qui réinvente une structure déjà
 présente est une architecture rejetée.
 
 ## Contraintes du projet
 
 À vérifier explicitement dans le livrable 2 :
 
-- **Deux modules tant que c'est tenable.** `md_iator.py` et `main.py` sont déclarés
-  `py-modules` dans `pyproject.toml`. Passer à un package est une décision
-  structurante (packaging, point d'entrée `md-iator = "main:main"`,
-  imports) : la justifier, ne pas la glisser.
+- **Paquet `md_iator/` à deux modules tant que c'est tenable.** La conversion
+  vit dans `__init__.py` (les tests patchent `md_iator.<attribut>`), la CLI
+  dans `cli.py` (point d'entrée `md-iator = "md_iator.cli:main"`), et
+  `__main__.py` permet `python -m md_iator`. Ajouter ou scinder un module est
+  une décision structurante (imports, cibles de monkeypatch des tests) : la
+  justifier, ne pas la glisser.
 - **Contrat CLI** : positional `input` (fichier ou dossier), `-o/--output`
   optionnel. Les commandes documentées dans `README.md` et `docs/usage.md`
   doivent continuer de fonctionner.

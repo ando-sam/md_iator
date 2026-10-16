@@ -29,7 +29,7 @@ réponse était autre. Zéro question de politesse.
 
 ## Ancrer dans le projet réel
 
-Lis d'abord ce qui existe : `CLAUDE.md`, `md_iator.py`, `docs/usage.md`. Une
+Lis d'abord ce qui existe : `CLAUDE.md`, le paquet `md_iator/`, `docs/usage.md`. Une
 conception qui ignore les contraintes du projet est une conception à jeter.
 
 Le socle, qui change les réponses de façon très concrète :
@@ -106,8 +106,8 @@ teste ; « la sortie doit être propre » ne se teste pas.
   automatique qui se trompera sans que l'utilisateur s'en aperçoive.
 - **MVP recommandé** — la plus petite version qui permet de savoir si le
   besoin est réel. Dis explicitement ce que tu coupes et pourquoi ça peut
-  attendre. Le MVP reste dans `md_iator.py` et ne casse aucune commande
-  existante.
+  attendre. Le MVP n'ajoute aucun module au paquet `md_iator/` et ne casse
+  aucune commande existante.
 - **En clair** — voir plus bas.
 
 Puis, en une ligne : la suite logique (`architecte-projet` si la portée est un

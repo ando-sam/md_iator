@@ -30,6 +30,7 @@ Demander si non fourni :
 | Présentation, installation, exemples courants | `README.md` | anglais |
 | Référence CLI complète (arguments, modes, codes de sortie, format de sortie) | `docs/usage.md` | anglais |
 | Environnement, architecture, commandes pour Claude | `CLAUDE.md` | français |
+| Changements visibles par version, ruptures et migration | `CHANGELOG.md` (section de la version en cours) | anglais |
 
 Ces trois fichiers se recoupent : un changement de commande ou d'argument se
 répercute dans les trois.
@@ -38,7 +39,7 @@ répercute dans les trois.
 
 - Langage concis, précis, orienté action.
 - Commandes copiables : `md-iator` (après `pip install -e .`) en forme
-  principale, `python main.py` en fallback sans installation.
+  principale, `python -m md_iator` en fallback sans installation.
 - Exemples de sortie copiés d'une vraie exécution, pas inventés. Lancer la
   commande avec `-o` vers un dossier temporaire pour les capturer.
 - Messages cités exactement comme le code les affiche (`converti : ...`,
@@ -52,7 +53,7 @@ répercute dans les trois.
 - **README** : installation et usage à jour.
 - **docs/usage.md** : synchronisé avec `main()` — chaque argument argparse y
   figure, avec ses défauts.
-- **CLAUDE.md** : section Architecture alignée sur les fonctions réelles de
-  `md_iator.py`.
+- **CLAUDE.md** : section Architecture alignée sur les fonctions réelles du
+  paquet `md_iator/`.
 - Doc livrée dans le même PR que le code concerné — si différée, documenter la
   dette explicitement.

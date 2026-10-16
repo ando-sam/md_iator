@@ -11,14 +11,16 @@ vérifier.
 
 ## Avant d'écrire
 
-- Lire `md_iator.py` en entier (il est court) et la section concernée de
+- Lire `md_iator/__init__.py` et `md_iator/cli.py` en entier (ils sont
+  courts) et la section concernée de
   `docs/usage.md`.
 - Exposer brièvement ce qui est compris, les contrats concernés, puis le plan
   de l'étape courante.
 
 ## Conventions du code
 
-- Fichier unique `md_iator.py`, Python ≥ 3.10.
+- Paquet `md_iator/` : conversion dans `__init__.py`, CLI dans `cli.py` ;
+  Python ≥ 3.10.
 - Type hints sur toutes les fonctions (`Path`, `Path | None`,
   `tuple[int, int]`).
 - Chemins avec `pathlib.Path`, jamais de concaténation de chaînes.
