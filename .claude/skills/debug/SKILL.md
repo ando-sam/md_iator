@@ -9,7 +9,7 @@ Diagnostic systématique, de la reproduction à la correction vérifiée.
 
 Demander si non fourni :
 - Symptôme, stack trace, ou sortie Markdown erronée
-- Commande exacte lancée (`md-iator ...` ou `python md_iator.py ...`) et code
+- Commande exacte lancée (`md-iator ...` ou `python main.py ...`) et code
   de sortie
 - Fichier source : format, taille, nombre de pages, PDF texte ou scanné
 - Mode : fichier unique ou batch (dossier)

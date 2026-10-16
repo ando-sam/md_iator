@@ -42,9 +42,9 @@ présente est une architecture rejetée.
 
 À vérifier explicitement dans le livrable 2 :
 
-- **Fichier unique tant que c'est tenable.** `md_iator.py` est déclaré comme
+- **Deux modules tant que c'est tenable.** `md_iator.py` et `main.py` sont déclarés
   `py-modules` dans `pyproject.toml`. Passer à un package est une décision
-  structurante (packaging, point d'entrée `md-iator = "md_iator:main"`,
+  structurante (packaging, point d'entrée `md-iator = "main:main"`,
   imports) : la justifier, ne pas la glisser.
 - **Contrat CLI** : positional `input` (fichier ou dossier), `-o/--output`
   optionnel. Les commandes documentées dans `README.md` et `docs/usage.md`

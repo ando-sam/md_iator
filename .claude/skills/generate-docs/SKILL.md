@@ -38,7 +38,7 @@ répercute dans les trois.
 
 - Langage concis, précis, orienté action.
 - Commandes copiables : `md-iator` (après `pip install -e .`) en forme
-  principale, `python md_iator.py` en fallback sans installation.
+  principale, `python main.py` en fallback sans installation.
 - Exemples de sortie copiés d'une vraie exécution, pas inventés. Lancer la
   commande avec `-o` vers un dossier temporaire pour les capturer.
 - Messages cités exactement comme le code les affiche (`converted: ...`,
