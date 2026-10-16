@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-import md_iator
+import main
 
 
 @pytest.fixture(autouse=True)
@@ -12,7 +12,7 @@ def _no_pandoc_download(pandoc_checks):
 
 def run(monkeypatch, *args):
     monkeypatch.setattr(sys, "argv", ["md_iator", *map(str, args)])
-    md_iator.main()
+    main.main()
 
 
 def exit_code(monkeypatch, *args):

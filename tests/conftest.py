@@ -55,9 +55,9 @@ def engines(monkeypatch):
 
 @pytest.fixture
 def pandoc_checks(monkeypatch) -> list[int]:
-    """Record calls to _ensure_pandoc instead of touching the network."""
+    """Record calls to ensure_pandoc instead of touching the network."""
     calls: list[int] = []
-    monkeypatch.setattr(md_iator, "_ensure_pandoc", lambda: calls.append(1))
+    monkeypatch.setattr(md_iator, "ensure_pandoc", lambda: calls.append(1))
     return calls
 
 

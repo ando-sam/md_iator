@@ -13,14 +13,14 @@ dependencies = [
 dev = ["pytest>=8"]
 
 [project.scripts]
-md-iator = "md_iator:main"
+md-iator = "main:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["md_iator"]
+py-modules = ["md_iator", "main"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
