@@ -1,4 +1,5 @@
 import sys
+from importlib import metadata
 
 import pytest
 
@@ -68,16 +69,79 @@ def test_cli_help_does_not_check_pandoc(monkeypatch, pandoc_checks):
     assert pandoc_checks == []
 
 
-def test_cli_checks_pandoc_once_before_converting(
+def test_cli_docx_conversion_checks_pandoc(
     engines, make, tmp_path, monkeypatch, pandoc_checks
 ):
     src = tmp_path / "src"
     make(src / "a.docx")
-    make(src / "b.docx")
 
     exit_code(monkeypatch, src, "-o", tmp_path / "out")
 
-    assert pandoc_checks == [1]
+    assert pandoc_checks
+
+
+def test_cli_pdf_only_batch_does_not_check_pandoc(
+    engines, make, tmp_path, monkeypatch, pandoc_checks
+):
+    src = tmp_path / "src"
+    make(src / "a.pdf")
+
+    assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 0
+    assert pandoc_checks == []
+
+
+def test_cli_skipped_docx_does_not_check_pandoc(
+    engines, make, tmp_path, monkeypatch, pandoc_checks
+):
+    src = tmp_path / "src"
+    make(src / "a.docx")
+    out = tmp_path / "out"
+    make(out / "a.md", "déjà converti")
+
+    assert exit_code(monkeypatch, src, "-o", out, "--skip-existing") == 0
+    assert pandoc_checks == []
+
+
+def _pandoc_offline(monkeypatch):
+    def unavailable():
+        raise md_iator.PandocUnavailableError("pandoc introuvable (simulé)")
+
+    monkeypatch.setattr(md_iator, "ensure_pandoc", unavailable)
+
+
+def test_cli_single_docx_offline_exits_1_without_traceback(
+    engines, make, tmp_path, monkeypatch, capsys
+):
+    src = make(tmp_path / "rapport.docx")
+    _pandoc_offline(monkeypatch)
+
+    assert exit_code(monkeypatch, src) == 1
+    assert capsys.readouterr().err == "error: pandoc introuvable (simulé)\n"
+
+
+def test_cli_batch_offline_still_converts_pdfs(
+    engines, make, tmp_path, monkeypatch, capsys
+):
+    src = tmp_path / "src"
+    make(src / "a.docx")
+    make(src / "b.pdf")
+    _pandoc_offline(monkeypatch)
+
+    assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 1
+    captured = capsys.readouterr()
+    assert captured.out.endswith("\n1 converti · 1 erreur\n")
+    assert f"error: {src / 'a.docx'} — pandoc introuvable (simulé)" in captured.err
+    assert "fichier/s" not in captured.err  # no progress bar outside a terminal
+
+
+def test_cli_version(monkeypatch, capsys):
+    assert exit_code(monkeypatch, "--version") == 0
+    assert capsys.readouterr().out == f"md-iator {metadata.version('md-iator')}\n"
+
+
+def test_cli_usage_uses_installed_command_name(monkeypatch, capsys):
+    assert exit_code(monkeypatch, "--help") == 0
+    assert capsys.readouterr().out.startswith("usage: md-iator ")
 
 
 def test_cli_output_trailing_slash_creates_directory(engines, make, tmp_path, monkeypatch):

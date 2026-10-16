@@ -3,7 +3,8 @@
 ## Synopsis
 
 ```
-python main.py <input> [-o <output>] [--skip-existing]
+md-iator <input> [-o <output>] [--skip-existing]
+md-iator --version
 ```
 
 | Argument | Description |
@@ -11,6 +12,12 @@ python main.py <input> [-o <output>] [--skip-existing]
 | `input` | Path to a `.docx` / `.pdf` file, or a folder |
 | `-o`, `--output` | Output `.md` file (single-file mode) or output folder (batch mode) |
 | `--skip-existing` | Leave existing `.md` files untouched instead of overwriting them |
+| `--version` | Print the installed version (`md-iator 0.1.0`) and exit |
+
+Without installation, `python main.py` accepts the same arguments.
+
+Progress bars are drawn on `stderr` only when it is a terminal; they are
+turned off when output is redirected or in CI, so logs stay readable.
 
 ---
 
@@ -198,9 +205,26 @@ for those pages.
 
 If `pandoc` is not found on your `PATH`, it is downloaded automatically
 via `pypandoc.download_pandoc()` and stored in the pypandoc data directory.
-This happens once; subsequent runs use the cached binary. The check runs
-only after the arguments are validated, so `--help` or a missing input path
-never triggers a download.
+This happens once; subsequent runs use the cached binary. The download notice
+is printed on `stderr`.
+
+pandoc is only needed for `.docx` files: it is checked the first time a
+`.docx` is actually converted. `--help`, `--version`, a missing input path, a
+PDF-only folder, or `.docx` files skipped with `--skip-existing` never check
+or download it.
+
+If pandoc is missing and cannot be downloaded (no network), each `.docx` is
+reported as an error with an installation hint, while PDFs are still
+converted:
+
+```
+  error: documents/report.docx — pandoc introuvable et téléchargement impossible (réseau ?). Installer pandoc : https://pandoc.org/installing.html
+  converted: out/slides.md
+
+1 converti · 1 erreur
+```
+
+The download is attempted only once per run.
 
 To install pandoc system-wide instead:
 

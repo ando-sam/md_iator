@@ -1,5 +1,6 @@
 """Convert DOCX and PDF files to Markdown using pypandoc and pdfplumber."""
 
+import functools
 import os
 import sys
 from dataclasses import dataclass
@@ -14,6 +15,10 @@ SUPPORTED_EXTENSIONS = {".docx", ".pdf"}
 
 class EmptyDocumentError(Exception):
     """No text could be extracted, so no Markdown file is written."""
+
+
+class PandocUnavailableError(Exception):
+    """pandoc is missing and could not be downloaded."""
 
 
 @dataclass
@@ -37,16 +42,34 @@ class BatchInterrupted(KeyboardInterrupt):
         self.total = total
 
 
-def ensure_pandoc() -> None:
+@functools.cache
+def _pandoc_problem() -> str | None:
+    # Cached, so a failed download is attempted once per run, not per file.
     try:
         pypandoc.get_pandoc_version()
+        return None
     except OSError:
-        print("pandoc introuvable — téléchargement en cours...", flush=True)
+        pass
+    tqdm.write("pandoc introuvable — téléchargement en cours...", file=sys.stderr)
+    try:
         pypandoc.download_pandoc(delete_installer=True)
-        print("pandoc installé.")
+    except Exception:
+        return (
+            "pandoc introuvable et téléchargement impossible (réseau ?). "
+            "Installer pandoc : https://pandoc.org/installing.html"
+        )
+    tqdm.write("pandoc installé.", file=sys.stderr)
+    return None
+
+
+def ensure_pandoc() -> None:
+    problem = _pandoc_problem()
+    if problem:
+        raise PandocUnavailableError(problem)
 
 
 def convert_docx(src: Path, dest: Path) -> None:
+    ensure_pandoc()
     pypandoc.convert_file(str(src), "markdown", outputfile=str(dest))
 
 
@@ -55,7 +78,8 @@ def convert_pdf(src: Path, dest: Path) -> None:
         pages = []
         has_text = False
         for i, page in enumerate(
-            tqdm(pdf.pages, desc=src.name, unit="page", leave=False), start=1
+            tqdm(pdf.pages, desc=src.name, unit="page", leave=False, disable=None),
+            start=1,
         ):
             text = (page.extract_text() or "").strip()
             has_text = has_text or bool(text)
@@ -110,7 +134,7 @@ def batch_convert(
     ]
     summary = Summary()
     written: dict[Path, Path] = {}
-    bar = tqdm(sorted(files), desc="fichiers", unit="fichier")
+    bar = tqdm(sorted(files), desc="fichiers", unit="fichier", disable=None)
     try:
         for src in bar:
             bar.set_postfix_str(src.name)

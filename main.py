@@ -4,9 +4,17 @@
 import argparse
 import os
 import sys
+from importlib import metadata
 from pathlib import Path
 
 import md_iator
+
+
+def version() -> str:
+    try:
+        return f"md-iator {metadata.version('md-iator')}"
+    except metadata.PackageNotFoundError:
+        return "md-iator (version inconnue : paquet non installé)"
 
 
 def format_summary(summary: md_iator.Summary) -> str:
@@ -26,8 +34,12 @@ def format_summary(summary: md_iator.Summary) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="md_iator",
+        prog="md-iator",
         description="Convertit des fichiers DOCX et PDF en Markdown.",
+    )
+    parser.add_argument(
+        "--version", action="version", version=version(),
+        help="afficher la version et quitter",
     )
     parser.add_argument("input", help="fichier ou dossier source")
     parser.add_argument(
@@ -55,8 +67,6 @@ def main() -> None:
         output.mkdir(parents=True, exist_ok=True)
 
     try:
-        md_iator.ensure_pandoc()
-
         if src.is_dir():
             summary = md_iator.batch_convert(src, output, args.skip_existing)
             if summary == md_iator.Summary():

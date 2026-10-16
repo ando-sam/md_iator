@@ -43,7 +43,8 @@ def _read(path) -> str:
 
 
 @pytest.fixture
-def engines(monkeypatch):
+def engines(monkeypatch, pandoc_checks):
+    # Requesting pandoc_checks keeps every conversion test off the network.
     def convert_file(source, to, outputfile):
         Path(outputfile).write_text(f"# {_read(source)}\n", encoding="utf-8")
 
