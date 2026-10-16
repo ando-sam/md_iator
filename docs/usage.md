@@ -80,6 +80,18 @@ The exit code is `0` only if every file succeeded; `1` otherwise.
 2/3 fichiers convertis.
 ```
 
+### Name collisions
+
+Two sources with the same name in the same folder (`report.docx` and
+`report.pdf`) would both produce `report.md`. Files are processed in sorted
+order: the first one is converted, the next one is reported as an error
+instead of overwriting it.
+
+```
+  converted: out/report.md
+  error: documents/report.pdf — sortie out/report.md déjà produite par documents/report.docx
+```
+
 ---
 
 ## Exit codes

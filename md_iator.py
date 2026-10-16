@@ -67,6 +67,7 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
         and not p.name.startswith("~$")
     ]
     ok, errors = 0, 0
+    written: dict[Path, Path] = {}
     bar = tqdm(sorted(files), desc="fichiers", unit="fichier")
     for src in bar:
         bar.set_postfix_str(src.name)
@@ -75,8 +76,14 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
             dest = output_dir / rel.with_suffix(".md")
         else:
             dest = None
+        target = dest if dest is not None else src.with_suffix(".md")
         try:
+            if target in written:
+                raise ValueError(
+                    f"sortie {target} déjà produite par {written[target]}"
+                )
             result = convert_file(src, dest)
+            written[target] = src
             bar.write(f"  converted: {result}")
             ok += 1
         except Exception as exc:
