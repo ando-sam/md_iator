@@ -1,6 +1,6 @@
 [project]
 name = "md-iator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convertit des fichiers DOCX et PDF en Markdown."
 readme = "README.md"
 license = "MIT"
