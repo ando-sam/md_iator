@@ -30,6 +30,10 @@ python md_iator.py scan.pdf -o notes/scan.md
 
 The output directory is created automatically if it does not exist.
 
+To write into a folder that does not exist yet, end `-o` with a slash:
+`-o notes/` creates `notes/` and writes `notes/scan.md`. Without the trailing
+slash, `-o notes` is taken as the output file name.
+
 ---
 
 ## Batch mode
@@ -140,7 +144,9 @@ pre-process with a tool such as `ocrmypdf` before converting.
 
 If `pandoc` is not found on your `PATH`, it is downloaded automatically
 via `pypandoc.download_pandoc()` and stored in the pypandoc data directory.
-This happens once; subsequent runs use the cached binary.
+This happens once; subsequent runs use the cached binary. The check runs
+only after the arguments are validated, so `--help` or a missing input path
+never triggers a download.
 
 To install pandoc system-wide instead:
 

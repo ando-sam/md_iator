@@ -2,6 +2,7 @@
 """Convert DOCX and PDF files to Markdown using pypandoc and pdfplumber."""
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -93,7 +94,6 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, in
 
 
 def main() -> None:
-    _ensure_pandoc()
     parser = argparse.ArgumentParser(
         prog="md_iator",
         description="Convertit des fichiers DOCX et PDF en Markdown.",
@@ -111,6 +111,13 @@ def main() -> None:
 
     if not src.exists():
         parser.error(f"chemin introuvable : {src}")
+
+    # Path() drops the trailing separator, so "-o out/" must be created here
+    # for convert_file to see a directory rather than a file name.
+    if args.output and args.output.endswith(("/", os.sep)):
+        output.mkdir(parents=True, exist_ok=True)
+
+    _ensure_pandoc()
 
     if src.is_dir():
         ok, errors = batch_convert(src, output)
