@@ -134,3 +134,65 @@ def test_cli_folder_without_sources(engines, tmp_path, monkeypatch, capsys):
 )
 def test_format_summary_plural_and_omits_zero(summary, expected):
     assert main.format_summary(summary) == expected
+
+
+def test_cli_single_skip_existing_keeps_file(engines, make, tmp_path, monkeypatch, capsys):
+    src = make(tmp_path / "rapport.docx")
+    existing = make(tmp_path / "rapport.md", "écrit à la main")
+
+    run(monkeypatch, src, "--skip-existing")
+
+    assert capsys.readouterr().err == f"ignoré : {existing} existe déjà\n"
+    assert existing.read_text(encoding="utf-8") == "écrit à la main"
+
+
+def test_cli_batch_summary_counts_skipped(engines, make, tmp_path, monkeypatch, capsys):
+    src = tmp_path / "src"
+    make(src / "a.docx")
+    make(src / "b.docx")
+    out = tmp_path / "out"
+    make(out / "a.md", "déjà converti")
+
+    assert exit_code(monkeypatch, src, "-o", out, "--skip-existing") == 0
+    assert capsys.readouterr().out.endswith("\n1 converti · 1 ignoré\n")
+
+
+def test_cli_batch_interrupt_exits_130_with_resume_hint(
+    engines, make, tmp_path, monkeypatch, capsys, interrupt_at
+):
+    src = tmp_path / "src"
+    for name in ("a.docx", "b.docx", "c.docx"):
+        make(src / name)
+    interrupt_at(2)
+
+    assert exit_code(monkeypatch, src, "-o", tmp_path / "out") == 130
+    captured = capsys.readouterr()
+    assert captured.out.endswith("\n1 converti\n")
+    assert captured.err.endswith(
+        "interrompu — 1/3 fichiers traités, aucun fichier partiel. "
+        "Relancer avec --skip-existing pour reprendre.\n"
+    )
+
+
+def test_cli_single_interrupt_exits_130(engines, make, tmp_path, monkeypatch, capsys, interrupt_at):
+    src = make(tmp_path / "rapport.docx")
+    interrupt_at(1)
+
+    assert exit_code(monkeypatch, src) == 130
+    assert capsys.readouterr().err == "\ninterrompu — aucun fichier partiel.\n"
+    assert not (tmp_path / "rapport.md").exists()
+
+
+def test_cli_resume_after_interrupt_converts_only_the_rest(
+    engines, make, tmp_path, monkeypatch, capsys, interrupt_at
+):
+    src = tmp_path / "src"
+    for name in ("a.docx", "b.docx", "c.docx"):
+        make(src / name)
+    out = tmp_path / "out"
+    interrupt_at(2)  # only the 2nd call is interrupted; later ones go through
+    assert exit_code(monkeypatch, src, "-o", out) == 130
+    capsys.readouterr()
+
+    assert exit_code(monkeypatch, src, "-o", out, "--skip-existing") == 0
+    assert capsys.readouterr().out.endswith("\n2 convertis · 1 ignoré\n")

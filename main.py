@@ -17,6 +17,8 @@ def format_summary(summary: md_iator.Summary) -> str:
     parts = [count(summary.converted, "converti")]
     if summary.empty:
         parts.append(count(summary.empty, "vide"))
+    if summary.skipped:
+        parts.append(count(summary.skipped, "ignoré"))
     if summary.errors:
         parts.append(count(summary.errors, "erreur"))
     return " · ".join(parts)
@@ -33,6 +35,12 @@ def main() -> None:
         help="fichier .md de sortie (mode fichier unique) ou dossier de sortie (mode batch)",
         default=None,
     )
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="ne pas reconvertir une source dont le .md existe déjà "
+        "(reprise après interruption)",
+    )
     args = parser.parse_args()
 
     src = Path(args.input)
@@ -46,25 +54,41 @@ def main() -> None:
     if args.output and args.output.endswith(("/", os.sep)):
         output.mkdir(parents=True, exist_ok=True)
 
-    md_iator.ensure_pandoc()
+    try:
+        md_iator.ensure_pandoc()
 
-    if src.is_dir():
-        summary = md_iator.batch_convert(src, output)
-        if summary == md_iator.Summary():
-            extensions = " ou ".join(sorted(md_iator.SUPPORTED_EXTENSIONS))
-            print(f"aucun fichier {extensions} dans {src}")
+        if src.is_dir():
+            summary = md_iator.batch_convert(src, output, args.skip_existing)
+            if summary == md_iator.Summary():
+                extensions = " ou ".join(sorted(md_iator.SUPPORTED_EXTENSIONS))
+                print(f"aucun fichier {extensions} dans {src}")
+            else:
+                print(f"\n{format_summary(summary)}")
+            sys.exit(1 if summary.errors else 0)
         else:
-            print(f"\n{format_summary(summary)}")
-        sys.exit(1 if summary.errors else 0)
-    else:
-        try:
-            dest = md_iator.convert_file(src, output)
-            print(f"converted: {dest}")
-        except md_iator.EmptyDocumentError as exc:
-            print(f"vide : {src} — {exc}", file=sys.stderr)
-        except Exception as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            sys.exit(1)
+            dest = md_iator.output_path(src, output)
+            if args.skip_existing and dest.exists():
+                print(f"ignoré : {dest} existe déjà", file=sys.stderr)
+                return
+            try:
+                dest = md_iator.convert_file(src, output)
+                print(f"converted: {dest}")
+            except md_iator.EmptyDocumentError as exc:
+                print(f"vide : {src} — {exc}", file=sys.stderr)
+            except Exception as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                sys.exit(1)
+    except md_iator.BatchInterrupted as exc:
+        print(f"\n{format_summary(exc.summary)}")
+        print(
+            f"interrompu — {exc.summary.processed}/{exc.total} fichiers traités, "
+            "aucun fichier partiel. Relancer avec --skip-existing pour reprendre.",
+            file=sys.stderr,
+        )
+        sys.exit(130)
+    except KeyboardInterrupt:
+        print("\ninterrompu — aucun fichier partiel.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":

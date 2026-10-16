@@ -20,7 +20,21 @@ class EmptyDocumentError(Exception):
 class Summary:
     converted: int = 0
     empty: int = 0
+    skipped: int = 0
     errors: int = 0
+
+    @property
+    def processed(self) -> int:
+        return self.converted + self.empty + self.skipped + self.errors
+
+
+class BatchInterrupted(KeyboardInterrupt):
+    """Ctrl-C during a batch, carrying what was done before it."""
+
+    def __init__(self, summary: Summary, total: int):
+        super().__init__()
+        self.summary = summary
+        self.total = total
 
 
 def ensure_pandoc() -> None:
@@ -53,18 +67,20 @@ def convert_pdf(src: Path, dest: Path) -> None:
     dest.write_text("\n\n---\n\n".join(pages), encoding="utf-8")
 
 
+def output_path(src: Path, output: Path | None = None) -> Path:
+    if output is None:
+        return src.with_suffix(".md")
+    if output.is_dir():
+        return output / src.with_suffix(".md").name
+    return output
+
+
 def convert_file(src: Path, output: Path | None = None) -> Path:
     ext = src.suffix.lower()
     if ext not in SUPPORTED_EXTENSIONS:
         raise ValueError(f"format non supporté : {ext}")
 
-    if output is None:
-        dest = src.with_suffix(".md")
-    elif output.is_dir():
-        dest = output / src.with_suffix(".md").name
-    else:
-        dest = output
-
+    dest = output_path(src, output)
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     # Convert into a temporary sibling, then rename: a failed or interrupted
@@ -82,7 +98,9 @@ def convert_file(src: Path, output: Path | None = None) -> Path:
     return dest
 
 
-def batch_convert(folder: Path, output_dir: Path | None = None) -> Summary:
+def batch_convert(
+    folder: Path, output_dir: Path | None = None, skip_existing: bool = False
+) -> Summary:
     # Extension matched case-insensitively; "~$" files are Word lock files.
     files = [
         p for p in folder.rglob("*")
@@ -93,28 +111,38 @@ def batch_convert(folder: Path, output_dir: Path | None = None) -> Summary:
     summary = Summary()
     written: dict[Path, Path] = {}
     bar = tqdm(sorted(files), desc="fichiers", unit="fichier")
-    for src in bar:
-        bar.set_postfix_str(src.name)
-        if output_dir is not None:
-            rel = src.relative_to(folder)
-            dest = output_dir / rel.with_suffix(".md")
-        else:
-            dest = None
-        target = dest if dest is not None else src.with_suffix(".md")
-        try:
-            if target in written:
-                raise ValueError(
-                    f"sortie {target} déjà produite par {written[target]}"
-                )
-            result = convert_file(src, dest)
-            written[target] = src
-            bar.write(f"  converted: {result}")
-            summary.converted += 1
-        except EmptyDocumentError as exc:
-            bar.write(f"  vide : {src} — {exc}", file=sys.stderr)
-            summary.empty += 1
-        except Exception as exc:
-            bar.write(f"  error: {src} — {exc}", file=sys.stderr)
-            summary.errors += 1
+    try:
+        for src in bar:
+            bar.set_postfix_str(src.name)
+            if output_dir is not None:
+                rel = src.relative_to(folder)
+                dest = output_dir / rel.with_suffix(".md")
+            else:
+                dest = None
+            target = dest if dest is not None else src.with_suffix(".md")
+            try:
+                if target in written:
+                    raise ValueError(
+                        f"sortie {target} déjà produite par {written[target]}"
+                    )
+                if skip_existing and target.exists():
+                    # Still claims the target, so a same-named source that
+                    # follows is reported as a collision rather than skipped.
+                    written[target] = src
+                    summary.skipped += 1
+                    continue
+                result = convert_file(src, dest)
+                written[target] = src
+                bar.write(f"  converted: {result}")
+                summary.converted += 1
+            except EmptyDocumentError as exc:
+                bar.write(f"  vide : {src} — {exc}", file=sys.stderr)
+                summary.empty += 1
+            except Exception as exc:
+                bar.write(f"  error: {src} — {exc}", file=sys.stderr)
+                summary.errors += 1
+    except KeyboardInterrupt:
+        bar.close()
+        raise BatchInterrupted(summary, len(files)) from None
     return summary
 

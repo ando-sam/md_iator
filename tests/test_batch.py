@@ -111,3 +111,56 @@ def test_batch_collision_second_converts_when_first_failed(engines, make, tmp_pa
     assert (out / "rapport.md").read_text(encoding="utf-8") == (
         "## Page 1\n\ndepuis pdf"
     )
+
+
+def test_batch_overwrites_existing_output_by_default(engines, make, tmp_path):
+    src = tmp_path / "src"
+    make(src / "a.docx", "nouveau")
+    out = tmp_path / "out"
+    make(out / "a.md", "écrit à la main")
+
+    assert md_iator.batch_convert(src, out) == md_iator.Summary(converted=1)
+    assert (out / "a.md").read_text(encoding="utf-8") == "# nouveau\n"
+
+
+@pytest.mark.parametrize("with_output", [True, False])
+def test_batch_skip_existing_keeps_existing_output(engines, make, tmp_path, with_output):
+    src = tmp_path / "src"
+    make(src / "a.docx")
+    make(src / "b.pdf")
+    out = tmp_path / "out" if with_output else None
+    existing = make((out or src) / "a.md", "écrit à la main")
+
+    summary = md_iator.batch_convert(src, out, skip_existing=True)
+
+    assert summary == md_iator.Summary(converted=1, skipped=1)
+    assert existing.read_text(encoding="utf-8") == "écrit à la main"
+    assert ((out or src) / "b.md").is_file()
+
+
+def test_batch_skipped_source_still_claims_its_output(engines, make, tmp_path, capsys):
+    src = tmp_path / "src"
+    make(src / "rapport.docx")
+    make(src / "rapport.pdf")
+    out = tmp_path / "out"
+    make(out / "rapport.md", "déjà converti")
+
+    summary = md_iator.batch_convert(src, out, skip_existing=True)
+
+    assert summary == md_iator.Summary(skipped=1, errors=1)
+    assert f"error: {src / 'rapport.pdf'}" in capsys.readouterr().err
+
+
+def test_batch_interrupt_reports_progress(engines, make, tmp_path, interrupt_at):
+    src = tmp_path / "src"
+    for name in ("a.docx", "b.docx", "c.docx"):
+        make(src / name)
+    out = tmp_path / "out"
+    interrupt_at(2)
+
+    with pytest.raises(md_iator.BatchInterrupted) as exc:
+        md_iator.batch_convert(src, out)
+
+    assert exc.value.summary == md_iator.Summary(converted=1)
+    assert (exc.value.summary.processed, exc.value.total) == (1, 3)
+    assert md_files(out) == ["a.md"]

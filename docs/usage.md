@@ -3,13 +3,14 @@
 ## Synopsis
 
 ```
-python main.py <input> [-o <output>]
+python main.py <input> [-o <output>] [--skip-existing]
 ```
 
 | Argument | Description |
 |---|---|
 | `input` | Path to a `.docx` / `.pdf` file, or a folder |
 | `-o`, `--output` | Output `.md` file (single-file mode) or output folder (batch mode) |
+| `--skip-existing` | Leave existing `.md` files untouched instead of overwriting them |
 
 ---
 
@@ -105,6 +106,39 @@ instead of overwriting it.
   error: documents/report.pdf — sortie out/report.md déjà produite par documents/report.docx
 ```
 
+### Skipping existing outputs and resuming
+
+By default an existing `.md` is overwritten. With `--skip-existing`, a source
+whose `.md` already exists is left alone and counted as skipped:
+
+```bash
+python main.py ./documents/ -o ./out/ --skip-existing
+```
+
+```
+4 convertis · 1 ignoré
+```
+
+Skipped files get no line of their own, only the count in the summary. A
+skipped source still claims its `.md`, so a same-named source that follows
+(`report.pdf` after `report.docx`) is still reported as a collision. In
+single-file mode, the skip is reported on `stderr`:
+`ignoré : report.md existe déjà` (exit code `0`).
+
+### Interrupting a run
+
+Ctrl-C stops the run cleanly: the file being converted is discarded (no
+partial `.md`), the summary of what was done is printed, and the exit code is
+`130`.
+
+```
+1 converti
+interrompu — 1/5 fichiers traités, aucun fichier partiel. Relancer avec --skip-existing pour reprendre.
+```
+
+Running the same command again with `--skip-existing` resumes where it
+stopped.
+
 ---
 
 ## Exit codes
@@ -114,6 +148,7 @@ instead of overwriting it.
 | `0` | All conversions succeeded |
 | `1` | At least one file failed (batch), or the single file failed |
 | `2` | Invalid arguments or input path not found — nothing is converted |
+| `130` | Interrupted with Ctrl-C |
 
 ---
 

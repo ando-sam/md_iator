@@ -69,3 +69,23 @@ def make():
         return path
 
     return _make
+
+
+@pytest.fixture
+def interrupt_at(monkeypatch):
+    """Make the n-th call to convert_file raise KeyboardInterrupt (Ctrl-C)."""
+
+    def _interrupt_at(n: int) -> None:
+        real = md_iator.convert_file
+        calls = 0
+
+        def convert_file(src, output=None):
+            nonlocal calls
+            calls += 1
+            if calls == n:
+                raise KeyboardInterrupt
+            return real(src, output)
+
+        monkeypatch.setattr(md_iator, "convert_file", convert_file)
+
+    return _interrupt_at
