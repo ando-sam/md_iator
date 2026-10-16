@@ -21,7 +21,8 @@ Demander si non fourni :
 - `tests/conftest.py` fournit les fixtures à réutiliser plutôt que d'en
   réécrire :
   - `engines` : faux pandoc et faux pdfplumber. Un faux `.docx` est du texte
-    converti en `# <contenu>\n` ; un faux `.pdf` contient ses pages séparées
+    converti en `# <contenu>\n` (s'il contient `IMAGE`, une image est extraite
+    comme avec `--extract-media`) ; un faux `.pdf` contient ses pages séparées
     par `\f` (page vide = `None`, comme une page scannée) ;
   - `make(path, content="contenu", corrupt=False)` : crée un fichier source,
     parents compris ; `corrupt=True` fait échouer les deux moteurs ;
