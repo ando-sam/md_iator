@@ -59,8 +59,12 @@ def convert_file(src: Path, output: Path | None = None) -> Path:
 
 
 def batch_convert(folder: Path, output_dir: Path | None = None) -> tuple[int, int]:
+    # Extension matched case-insensitively; "~$" files are Word lock files.
     files = [
-        p for ext in SUPPORTED_EXTENSIONS for p in folder.rglob(f"*{ext}")
+        p for p in folder.rglob("*")
+        if p.is_file()
+        and p.suffix.lower() in SUPPORTED_EXTENSIONS
+        and not p.name.startswith("~$")
     ]
     ok, errors = 0, 0
     bar = tqdm(sorted(files), desc="fichiers", unit="fichier")

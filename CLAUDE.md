@@ -32,7 +32,7 @@ Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
 - `convert_docx(src, dest)` — délègue à `pypandoc.convert_file`
 - `convert_pdf(src, dest)` — extrait le texte page par page avec `pdfplumber`, insère des séparateurs `---` entre les pages
 - `convert_file(src, output)` — dispatch par extension, calcule le chemin de sortie
-- `batch_convert(folder, output_dir)` — `rglob` récursif sur `.docx` et `.pdf`, continue sur erreur
+- `batch_convert(folder, output_dir)` — `rglob` récursif, extensions insensibles à la casse, ignore les fichiers verrou Word `~$*`, continue sur erreur
 - `main()` — argparse avec un positional `input` (fichier ou dossier) et `-o/--output` optionnel
 
 Pas de tests, pas de linter configuré. `docs/usage.md` contient la référence CLI complète.

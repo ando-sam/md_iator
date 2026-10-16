@@ -35,7 +35,8 @@ The output directory is created automatically if it does not exist.
 ## Batch mode
 
 Triggered when `input` is a directory. All `.docx` and `.pdf` files are
-discovered **recursively**.
+discovered **recursively**. Extensions are matched case-insensitively
+(`REPORT.PDF` is included), and Word lock files (`~$report.docx`) are skipped.
 
 ```bash
 # Each file gets a sibling .md in the same folder
