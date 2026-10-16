@@ -28,14 +28,14 @@ Repository = "https://github.com/ando-sam/md_iator"
 Issues = "https://github.com/ando-sam/md_iator/issues"
 
 [project.scripts]
-md-iator = "main:main"
+md-iator = "md_iator.cli:main"
 
 [build-system]
 requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["md_iator", "main"]
+packages = ["md_iator"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

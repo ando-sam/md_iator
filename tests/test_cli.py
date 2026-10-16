@@ -3,8 +3,8 @@ from importlib import metadata
 
 import pytest
 
-import main
 import md_iator
+from md_iator import cli
 
 
 @pytest.fixture(autouse=True)
@@ -14,7 +14,7 @@ def _no_pandoc_download(pandoc_checks):
 
 def run(monkeypatch, *args):
     monkeypatch.setattr(sys, "argv", ["md_iator", *map(str, args)])
-    main.main()
+    cli.main()
 
 
 def exit_code(monkeypatch, *args):
@@ -197,7 +197,7 @@ def test_cli_folder_without_sources(engines, tmp_path, monkeypatch, capsys):
     ],
 )
 def test_format_summary_plural_and_omits_zero(summary, expected):
-    assert main.format_summary(summary) == expected
+    assert cli.format_summary(summary) == expected
 
 
 def test_cli_single_skip_existing_keeps_file(engines, make, tmp_path, monkeypatch, capsys):

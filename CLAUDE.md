@@ -19,17 +19,17 @@ md-iator rapport.pdf -o ./output/rapport.md
 md-iator ./documents/
 md-iator ./documents/ -o ./markdown/
 
-# Sans installation (fallback)
-python main.py rapport.docx
+# Sans installation (fallback, depuis la racine du dépôt)
+python -m md_iator rapport.docx
 ```
 
 Formats supportés : `.docx` (via pandoc) et `.pdf` (via pdfplumber).
 
 ## Architecture
 
-Deux modules :
+Paquet `md_iator/` :
 
-`md_iator.py` — logique de conversion :
+`md_iator/__init__.py` — logique de conversion (importée par `import md_iator` ; les tests patchent ses attributs directement) :
 
 - `ensure_pandoc()` — vérifie pandoc, le télécharge s'il est absent ; appelé par `convert_docx` (donc seulement si un DOCX est vraiment converti) ; résultat mis en cache par `_pandoc_problem()` (`functools.cache`) — un téléchargement raté n'est tenté qu'une fois et lève `PandocUnavailableError` (message lisible + lien d'installation)
 - `media_dir(dest)` — dossier d'images d'un DOCX, à côté du `.md` : `<nom>_media/`, espaces et ponctuation remplacés par `_` (liens CommonMark valides)
@@ -40,7 +40,7 @@ Deux modules :
 - Barres `tqdm` créées avec `disable=None` : affichées seulement si stderr est un terminal
 - `batch_convert(folder, output_dir, skip_existing)` — `rglob` récursif, extensions insensibles à la casse, ignore les fichiers verrou Word `~$*`, signale en erreur une source dont le `.md` cible a déjà été produit (pas d'écrasement), continue sur erreur ; un DOCX réserve aussi son dossier `_media` (collision `a b.docx` / `a_b.docx` signalée) ; avec `skip_existing`, saute une cible existante tout en la réservant (la collision reste signalée) ; renvoie un `Summary` (`converted`, `empty`, `skipped`, `errors`) ; sur Ctrl-C lève `BatchInterrupted` (sous-classe de `KeyboardInterrupt`) avec le `Summary` partiel et le total
 
-`main.py` — point d'entrée CLI (`md-iator = "main:main"`) :
+`md_iator/cli.py` — point d'entrée CLI (`md-iator = "md_iator.cli:main"`) ; `md_iator/__main__.py` permet `python -m md_iator` :
 
 - `format_summary(summary)` — récap final en français (`2 convertis · 1 vide · 1 erreur`, compteurs à 0 omis sauf `convertis`)
 - `main()` — argparse avec un positional `input` (fichier ou dossier) et `-o/--output` optionnel ; un `-o` terminé par `/` est créé comme dossier ; `--version` (via `importlib.metadata`) ; `prog="md-iator"` ; `--skip-existing` ; Ctrl-C → récap partiel, message de reprise, code 130

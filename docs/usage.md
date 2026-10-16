@@ -14,7 +14,8 @@ md-iator --version
 | `--skip-existing` | Leave existing `.md` files untouched instead of overwriting them |
 | `--version` | Print the installed version (`md-iator 0.1.0`) and exit |
 
-Without installation, `python main.py` accepts the same arguments.
+Without installation, `python -m md_iator` (from the repository root, with
+the dependencies installed) accepts the same arguments.
 
 Progress bars are drawn on `stderr` only when it is a terminal; they are
 turned off when output is redirected or in CI, so logs stay readable.
@@ -43,13 +44,13 @@ Triggered when `input` is a file.
 
 ```bash
 # Output written next to the source: report.md
-python main.py report.docx
+md-iator report.docx
 
 # Explicit output file
-python main.py report.docx -o converted/report.md
+md-iator report.docx -o converted/report.md
 
 # PDF with custom destination
-python main.py scan.pdf -o notes/scan.md
+md-iator scan.pdf -o notes/scan.md
 ```
 
 The output directory is created automatically if it does not exist.
@@ -68,10 +69,10 @@ discovered **recursively**. Extensions are matched case-insensitively
 
 ```bash
 # Each file gets a sibling .md in the same folder
-python main.py ./documents/
+md-iator ./documents/
 
 # All .md files go to ./out/, mirroring the subfolder structure
-python main.py ./documents/ -o ./out/
+md-iator ./documents/ -o ./out/
 ```
 
 ### Example tree
@@ -135,7 +136,7 @@ By default an existing `.md` is overwritten. With `--skip-existing`, a source
 whose `.md` already exists is left alone and counted as skipped:
 
 ```bash
-python main.py ./documents/ -o ./out/ --skip-existing
+md-iator ./documents/ -o ./out/ --skip-existing
 ```
 
 ```
